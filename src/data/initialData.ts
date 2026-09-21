@@ -1,0 +1,783 @@
+import {
+  StudentProfile,
+  AptitudeQuestion,
+  CodingProblem,
+  SkillItem,
+  Badge,
+  PersonalizedRoadmap,
+} from '../types';
+
+export const INITIAL_STUDENT_PROFILE: StudentProfile = {
+  id: 'std_01',
+  fullName: 'Aarav Sharma',
+  email: 'aarav.sharma@campus.edu',
+  college: 'National Institute of Technology',
+  degree: 'Bachelor of Technology (B.Tech)',
+  branch: 'Computer Science and Engineering',
+  graduationYear: 2026,
+  cgpa: 8.7,
+  targetRole: 'Software Development Engineer',
+  targetCompanyTier: 'High-Growth Tech Unicorns (Razorpay, Swiggy, Uber)',
+  githubUrl: 'https://github.com/aaravsharma-dev',
+  linkedinUrl: 'https://linkedin.com/in/aarav-sharma-tech',
+  resumeHeadline: 'Passionate about distributed systems, data structures, and high-throughput backend services.',
+  skills: ['Data Structures', 'C++', 'JavaScript', 'React', 'Node.js', 'SQL', 'OS Concepts', 'Git'],
+  streakDays: 6,
+  avatarSeed: 'Aarav',
+};
+
+export const SAMPLE_PERSONAS: Record<string, StudentProfile> = {
+  aarav: INITIAL_STUDENT_PROFILE,
+  priya: {
+    id: 'std_02',
+    fullName: 'Priya Patel',
+    email: 'priya.patel@engg.edu',
+    college: 'Vellore Institute of Technology',
+    degree: 'B.Tech Electronics & Comm',
+    branch: 'Electronics and Communication',
+    graduationYear: 2025,
+    cgpa: 9.1,
+    targetRole: 'Full Stack Developer',
+    targetCompanyTier: 'Tier-1 Big Tech (Google, Microsoft, Amazon)',
+    githubUrl: 'https://github.com/priyapatel-code',
+    linkedinUrl: 'https://linkedin.com/in/priya-patel-ece',
+    resumeHeadline: 'Hardware enthusiast turned full stack architect. Skilled in MERN stack and LeetCode algorithmic problem solving.',
+    skills: ['Algorithms', 'Python', 'TypeScript', 'React', 'MongoDB', 'System Design Basics'],
+    streakDays: 14,
+    avatarSeed: 'Priya',
+  },
+  rohan: {
+    id: 'std_03',
+    fullName: 'Rohan Verma',
+    email: 'rohan.v@techuniv.ac.in',
+    college: 'Delhi Technological University',
+    degree: 'B.Tech Information Technology',
+    branch: 'Information Technology',
+    graduationYear: 2026,
+    cgpa: 7.9,
+    targetRole: 'Backend / Systems Engineer',
+    targetCompanyTier: 'Mid-Size Product Companies',
+    githubUrl: 'https://github.com/rohan-v-sys',
+    linkedinUrl: 'https://linkedin.com/in/rohanverma-it',
+    resumeHeadline: 'Linux kernel explorer and Go enthusiast eager for high-concurrency cloud backend roles.',
+    skills: ['Go', 'Java', 'Docker', 'PostgreSQL', 'Computer Networks', 'Redis'],
+    streakDays: 3,
+    avatarSeed: 'Rohan',
+  },
+};
+
+export const APTITUDE_QUESTION_BANK: AptitudeQuestion[] = [
+  {
+    id: 'apt_01',
+    category: 'quantitative',
+    topic: 'Time & Work',
+    question: 'A can complete a piece of work in 12 days, while B can complete the same work in 18 days. If they work together for 4 days, what fraction of the work remains unfinished?',
+    options: ['5/9', '4/9', '7/18', '2/9'],
+    correctIndex: 1,
+    explanation: 'A\'s 1 day work = 1/12. B\'s 1 day work = 1/18.\nTogether in 1 day = 1/12 + 1/18 = (3+2)/36 = 5/36.\nIn 4 days together = 4 * (5/36) = 20/36 = 5/9.\nRemaining work = 1 - 5/9 = 4/9.',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'apt_02',
+    category: 'quantitative',
+    topic: 'Speed, Time & Distance',
+    question: 'A train 180 meters long is traveling at 72 km/h. How many seconds will it take to cross an electric pole standing alongside the tracks?',
+    options: ['8 seconds', '9 seconds', '10 seconds', '12 seconds'],
+    correctIndex: 1,
+    explanation: 'Convert speed to m/s: 72 * (5/18) = 20 m/s.\nTime to cross pole = Train length / Speed = 180 / 20 = 9 seconds.',
+    difficulty: 'Easy',
+  },
+  {
+    id: 'apt_03',
+    category: 'quantitative',
+    topic: 'Profit & Loss',
+    question: 'An item is sold at a profit of 20%. If the cost price had been 10% less and the selling price $18 less, the profit would have been 25%. What was the original cost price?',
+    options: ['$200', '$240', '$250', '$300'],
+    correctIndex: 1,
+    explanation: 'Let CP = 100x. Then SP = 120x.\nNew CP = 90x, New SP = 120x - 18.\nProfit = 25% => New SP = 1.25 * 90x = 112.5x.\n120x - 18 = 112.5x => 7.5x = 18 => x = 2.4.\nOriginal CP = 100 * 2.4 = $240.',
+    difficulty: 'Hard',
+  },
+  {
+    id: 'apt_04',
+    category: 'logical',
+    topic: 'Number Series',
+    question: 'Find the missing number in the sequence: 4, 11, 30, 85, 248, ?',
+    options: ['735', '737', '741', '744'],
+    correctIndex: 1,
+    explanation: 'Examine pattern: (4 * 3) - 1 = 11;\n(11 * 3) - 3 = 30;\n(30 * 3) - 5 = 85;\n(85 * 3) - 7 = 248;\nNext term = (248 * 3) - 9 = 744 - 9 = 737.',
+    difficulty: 'Hard',
+  },
+  {
+    id: 'apt_05',
+    category: 'logical',
+    topic: 'Syllogism',
+    question: 'Statements:\n1. All developers are problem solvers.\n2. Some problem solvers are musicians.\nConclusions:\nI. Some developers are musicians.\nII. No developer is a musician.',
+    options: ['Only I follows', 'Only II follows', 'Either I or II follows', 'Neither I nor II follows'],
+    correctIndex: 2,
+    explanation: 'Developers and Musicians have no direct relationship defined in the premises. However, Conclusion I is a particular affirmative (Some A are B) and Conclusion II is a universal negative (No A is B). Together they form a complementary pair (Either-Or).',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'apt_06',
+    category: 'logical',
+    topic: 'Blood Relations',
+    question: 'Pointing to a gentleman on stage, Riya said, "His only brother is the father of my daughter\'s father." How is the gentleman related to Riya?',
+    options: ['Father', 'Uncle / Uncle-in-law', 'Brother-in-law', 'Grandfather'],
+    correctIndex: 1,
+    explanation: 'My daughter\'s father = Riya\'s husband.\nFather of Riya\'s husband = Riya\'s father-in-law.\nGentleman\'s only brother = Father-in-law.\nTherefore, the gentleman is the brother of Riya\'s father-in-law (Uncle-in-law).',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'apt_07',
+    category: 'verbal',
+    topic: 'Sentence Correction & Grammar',
+    question: 'Identify the grammatically correct sentence:',
+    options: [
+      'Neither the project lead nor the backend engineers was aware of the memory leak.',
+      'Neither the project lead nor the backend engineers were aware of the memory leak.',
+      'Neither the project lead or the backend engineers were aware of the memory leak.',
+      'Neither the project lead nor the backend engineers has been aware of the memory leak.',
+    ],
+    correctIndex: 1,
+    explanation: 'In "neither... nor" constructions connecting two subjects of different numbers, the verb agrees with the closer subject ("backend engineers" is plural => "were aware").',
+    difficulty: 'Easy',
+  },
+  {
+    id: 'apt_08',
+    category: 'verbal',
+    topic: 'Vocabulary & Analogy',
+    question: 'EPHEMERAL : PERMANENT :: TACITURN : ?',
+    options: ['Reticent', 'Garrulous', 'Belligerent', 'Sagacious'],
+    correctIndex: 1,
+    explanation: 'Ephemeral is an antonym of Permanent. Taciturn (habitually quiet/reserved) is an antonym of Garrulous (excessively talkative).',
+    difficulty: 'Medium',
+  },
+];
+
+export const CODING_PROBLEMS: CodingProblem[] = [
+  {
+    id: 'code_01',
+    title: 'Two Sum Target Indices',
+    category: 'Arrays & Hashing',
+    difficulty: 'Easy',
+    description: `Given an array of integers \`nums\` and an integer \`target\`, return the indices of the two numbers such that they add up to \`target\`.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.`,
+    constraints: [
+      '2 <= nums.length <= 10^4',
+      '-10^9 <= nums[i] <= 10^9',
+      '-10^9 <= target <= 10^9',
+      'Only one valid answer exists.',
+    ],
+    starterCode: {
+      javascript: `function twoSum(nums, target) {
+  // Return an array of two indices [i, j]
+  const map = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (map.has(complement)) {
+      return [map.get(complement), i];
+    }
+    map.set(nums[i], i);
+  }
+  return [];
+}`,
+      python: `def two_sum(nums: list[int], target: int) -> list[int]:
+    lookup = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in lookup:
+            return [lookup[complement], i]
+        lookup[num] = i
+    return []`,
+      java: `class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            int comp = target - nums[i];
+            if (map.containsKey(comp)) return new int[] { map.get(comp), i };
+            map.put(nums[i], i);
+        }
+        return new int[0];
+    }
+}`,
+      cpp: `class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> seen;
+        for (int i = 0; i < nums.size(); i++) {
+            int comp = target - nums[i];
+            if (seen.count(comp)) return {seen[comp], i};
+            seen[nums[i]] = i;
+        }
+        return {};
+    }
+};`,
+    },
+    testCases: [
+      {
+        id: 'tc_1',
+        input: 'nums = [2,7,11,15], target = 9',
+        expectedOutput: '[0,1]',
+        explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].',
+      },
+      {
+        id: 'tc_2',
+        input: 'nums = [3,2,4], target = 6',
+        expectedOutput: '[1,2]',
+        explanation: 'nums[1] + nums[2] = 2 + 4 = 6.',
+      },
+      {
+        id: 'tc_3',
+        input: 'nums = [3,3], target = 6',
+        expectedOutput: '[0,1]',
+        explanation: 'nums[0] + nums[1] = 3 + 3 = 6.',
+      },
+    ],
+    solutionHints: [
+      'Can you solve it in a single pass instead of nested loops O(n^2)?',
+      'Use a Hash Map to store numbers you have already visited along with their index.',
+      'Check if (target - current_number) is already present in your map.',
+    ],
+    targetTimeComplexity: 'O(n)',
+    targetSpaceComplexity: 'O(n)',
+  },
+  {
+    id: 'code_02',
+    title: 'Valid Parentheses Checker',
+    category: 'Stack & Queue',
+    difficulty: 'Easy',
+    description: `Given a string \`s\` containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
+
+An input string is valid if:
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+3. Every close bracket has a corresponding open bracket of the same type.`,
+    constraints: [
+      '1 <= s.length <= 10^4',
+      's consists of parentheses only \'()[]{}\'.',
+    ],
+    starterCode: {
+      javascript: `function isValid(s) {
+  const stack = [];
+  const map = { ')': '(', '}': '{', ']': '[' };
+  
+  for (const char of s) {
+    if (char === '(' || char === '{' || char === '[') {
+      stack.push(char);
+    } else {
+      if (stack.length === 0 || stack.pop() !== map[char]) {
+        return false;
+      }
+    }
+  }
+  return stack.length === 0;
+}`,
+      python: `def is_valid(s: str) -> bool:
+    stack = []
+    mapping = {")": "(", "}": "{", "]": "["}
+    for char in s:
+        if char in mapping.values():
+            stack.append(char)
+        elif char in mapping:
+            if not stack or stack.pop() != mapping[char]:
+                return False
+    return not stack`,
+      java: `class Solution {
+    public boolean isValid(String s) {
+        Stack<Character> stack = new Stack<>();
+        for (char c : s.toCharArray()) {
+            if (c == '(') stack.push(')');
+            else if (c == '{') stack.push('}');
+            else if (c == '[') stack.push(']');
+            else if (stack.isEmpty() || stack.pop() != c) return false;
+        }
+        return stack.isEmpty();
+    }
+}`,
+      cpp: `class Solution {
+public:
+    bool isValid(string s) {
+        stack<char> st;
+        for (char c : s) {
+            if (c == '(') st.push(')');
+            else if (c == '{') st.push('}');
+            else if (c == '[') st.push(']');
+            else {
+                if (st.empty() || st.top() != c) return false;
+                st.pop();
+            }
+        }
+        return st.empty();
+    }
+};`,
+    },
+    testCases: [
+      {
+        id: 'tc_21',
+        input: 's = "()"',
+        expectedOutput: 'true',
+      },
+      {
+        id: 'tc_22',
+        input: 's = "()[]{}"',
+        expectedOutput: 'true',
+      },
+      {
+        id: 'tc_23',
+        input: 's = "(]"',
+        expectedOutput: 'false',
+      },
+      {
+        id: 'tc_24',
+        input: 's = "([)]"',
+        expectedOutput: 'false',
+      },
+    ],
+    solutionHints: [
+      'A Stack data structure (LIFO) is ideal for matching nested pairs.',
+      'Whenever you encounter an open bracket, push the expected closing bracket or the open bracket to the stack.',
+      'When you see a closing bracket, compare it with the top of the stack.',
+    ],
+    targetTimeComplexity: 'O(n)',
+    targetSpaceComplexity: 'O(n)',
+  },
+  {
+    id: 'code_03',
+    title: 'Maximum Subarray (Kadane Algorithm)',
+    category: 'Dynamic Programming',
+    difficulty: 'Medium',
+    description: `Given an integer array \`nums\`, find the subarray with the largest sum, and return its sum.
+
+A subarray is a contiguous non-empty sequence of elements within an array.`,
+    constraints: [
+      '1 <= nums.length <= 10^5',
+      '-10^4 <= nums[i] <= 10^4',
+    ],
+    starterCode: {
+      javascript: `function maxSubArray(nums) {
+  let currentSum = nums[0];
+  let maxSum = nums[0];
+  
+  for (let i = 1; i < nums.length; i++) {
+    currentSum = Math.max(nums[i], currentSum + nums[i]);
+    maxSum = Math.max(maxSum, currentSum);
+  }
+  return maxSum;
+}`,
+      python: `def max_sub_array(nums: list[int]) -> int:
+    curr_sum = max_sum = nums[0]
+    for x in nums[1:]:
+        curr_sum = max(x, curr_sum + x)
+        max_sum = max(max_sum, curr_sum)
+    return max_sum`,
+      java: `class Solution {
+    public int maxSubArray(int[] nums) {
+        int max = nums[0], cur = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            cur = Math.max(nums[i], cur + nums[i]);
+            max = Math.max(max, cur);
+        }
+        return max;
+    }
+}`,
+      cpp: `class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int max_s = nums[0], cur = nums[0];
+        for (size_t i = 1; i < nums.size(); ++i) {
+            cur = max(nums[i], cur + nums[i]);
+            max_s = max(max_s, cur);
+        }
+        return max_s;
+    }
+};`,
+    },
+    testCases: [
+      {
+        id: 'tc_31',
+        input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]',
+        expectedOutput: '6',
+        explanation: 'The subarray [4,-1,2,1] has the largest sum 6.',
+      },
+      {
+        id: 'tc_32',
+        input: 'nums = [1]',
+        expectedOutput: '1',
+      },
+      {
+        id: 'tc_33',
+        input: 'nums = [5,4,-1,7,8]',
+        expectedOutput: '23',
+      },
+    ],
+    solutionHints: [
+      'If the running sum becomes negative, starting a new subarray from the next element is always better than continuing.',
+      'Keep track of local maximum ending at the current index and global maximum overall.',
+    ],
+    targetTimeComplexity: 'O(n)',
+    targetSpaceComplexity: 'O(1)',
+  },
+  {
+    id: 'code_04',
+    title: 'Reverse Words in a String',
+    category: 'Strings & Parsing',
+    difficulty: 'Medium',
+    description: `Given an input string \`s\`, reverse the order of the words.
+
+A word is defined as a sequence of non-space characters. The words in \`s\` will be separated by at least one space.
+
+Return a string of the words in reverse order concatenated by a single space. Note that \`s\` may contain leading or trailing spaces or multiple spaces between two words. The returned string should only have a single space separating the words.`,
+    constraints: [
+      '1 <= s.length <= 10^4',
+      's contains English letters, digits, and spaces \' \'.',
+      'There is at least one word in s.',
+    ],
+    starterCode: {
+      javascript: `function reverseWords(s) {
+  return s.trim().split(/\\s+/).reverse().join(' ');
+}`,
+      python: `def reverse_words(s: str) -> str:
+    return " ".join(reversed(s.split()))`,
+      java: `class Solution {
+    public String reverseWords(String s) {
+        String[] words = s.trim().split("\\\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (int i = words.length - 1; i >= 0; i--) {
+            sb.append(words[i]);
+            if (i > 0) sb.append(" ");
+        }
+        return sb.toString();
+    }
+}`,
+      cpp: `class Solution {
+public:
+    string reverseWords(string s) {
+        stringstream ss(s);
+        string word, res = "";
+        vector<string> words;
+        while (ss >> word) words.push_back(word);
+        for (int i = words.size() - 1; i >= 0; i--) {
+            res += words[i] + (i > 0 ? " " : "");
+        }
+        return res;
+    }
+};`,
+    },
+    testCases: [
+      {
+        id: 'tc_41',
+        input: 's = "the sky is blue"',
+        expectedOutput: '"blue is sky the"',
+      },
+      {
+        id: 'tc_42',
+        input: 's = "  hello world  "',
+        expectedOutput: '"world hello"',
+      },
+      {
+        id: 'tc_43',
+        input: 's = "a good   example"',
+        expectedOutput: '"example good a"',
+      },
+    ],
+    solutionHints: [
+      'Be careful with multiple contiguous spaces and leading/trailing whitespace.',
+      'In in-place languages like C++, you can reverse the whole string and then reverse each individual word.',
+    ],
+    targetTimeComplexity: 'O(n)',
+    targetSpaceComplexity: 'O(n) or O(1) in C++',
+  },
+];
+
+export const INITIAL_SKILLS: SkillItem[] = [
+  {
+    id: 'sk_01',
+    name: 'Arrays, Strings & Two Pointers',
+    category: 'DSA & Algorithms',
+    level: 82,
+    targetLevel: 90,
+    isVerified: true,
+    lastAssessed: 'Yesterday',
+  },
+  {
+    id: 'sk_02',
+    name: 'Stack, Queues & Hash Tables',
+    category: 'DSA & Algorithms',
+    level: 78,
+    targetLevel: 85,
+    isVerified: true,
+    lastAssessed: '3 days ago',
+  },
+  {
+    id: 'sk_03',
+    name: 'Trees & Graph Algorithms (BFS/DFS)',
+    category: 'DSA & Algorithms',
+    level: 60,
+    targetLevel: 85,
+    isVerified: false,
+    lastAssessed: '1 week ago',
+  },
+  {
+    id: 'sk_04',
+    name: 'Dynamic Programming & Recursion',
+    category: 'DSA & Algorithms',
+    level: 48,
+    targetLevel: 80,
+    isVerified: false,
+  },
+  {
+    id: 'sk_05',
+    name: 'Quantitative Aptitude (Speed-Time-Work)',
+    category: 'Aptitude & Logic',
+    level: 72,
+    targetLevel: 85,
+    isVerified: true,
+    lastAssessed: 'Today',
+  },
+  {
+    id: 'sk_06',
+    name: 'Logical Reasoning & Syllogisms',
+    category: 'Aptitude & Logic',
+    level: 84,
+    targetLevel: 90,
+    isVerified: true,
+    lastAssessed: 'Today',
+  },
+  {
+    id: 'sk_07',
+    name: 'Database Management Systems (SQL & Indexing)',
+    category: 'Core CS Fundamentals',
+    level: 75,
+    targetLevel: 85,
+    isVerified: true,
+  },
+  {
+    id: 'sk_08',
+    name: 'Operating Systems & Concurrency',
+    category: 'Core CS Fundamentals',
+    level: 64,
+    targetLevel: 80,
+    isVerified: false,
+  },
+  {
+    id: 'sk_09',
+    name: 'Computer Networks (TCP/IP, HTTP/3, DNS)',
+    category: 'Core CS Fundamentals',
+    level: 68,
+    targetLevel: 80,
+    isVerified: false,
+  },
+  {
+    id: 'sk_10',
+    name: 'High-Level System Design & Architecture',
+    category: 'Development & Frameworks',
+    level: 52,
+    targetLevel: 75,
+    isVerified: false,
+  },
+  {
+    id: 'sk_11',
+    name: 'Full-Stack Web APIs & State Handling',
+    category: 'Development & Frameworks',
+    level: 80,
+    targetLevel: 85,
+    isVerified: true,
+  },
+  {
+    id: 'sk_12',
+    name: 'Technical Communication & STAR Behavioral Format',
+    category: 'Soft Skills & Interviews',
+    level: 70,
+    targetLevel: 85,
+    isVerified: false,
+  },
+];
+
+export const INITIAL_BADGES: Badge[] = [
+  {
+    id: 'b_01',
+    title: 'First Code Blood',
+    description: 'Successfully submit and pass all test cases on your first coding challenge.',
+    icon: 'Terminal',
+    category: 'Coding',
+    rarity: 'Common',
+    unlocked: true,
+    unlockedAt: '2026-09-15',
+    progress: 1,
+    maxProgress: 1,
+  },
+  {
+    id: 'b_02',
+    title: 'Aptitude Ace',
+    description: 'Score above 80% on a timed quantitative & logical placement assessment.',
+    icon: 'BrainCircuit',
+    category: 'Assessment',
+    rarity: 'Rare',
+    unlocked: true,
+    unlockedAt: '2026-09-18',
+    progress: 1,
+    maxProgress: 1,
+  },
+  {
+    id: 'b_03',
+    title: '7-Day Grinder',
+    description: 'Maintain a 7-day daily practice streak without interruption.',
+    icon: 'Flame',
+    category: 'Streak',
+    rarity: 'Rare',
+    unlocked: false,
+    progress: 6,
+    maxProgress: 7,
+  },
+  {
+    id: 'b_04',
+    title: '700 Club: Ready for Tech',
+    description: 'Cross the 700 Placement Readiness Score (PRS™) threshold.',
+    icon: 'ShieldCheck',
+    category: 'Readiness',
+    rarity: 'Epic',
+    unlocked: true,
+    unlockedAt: '2026-09-19',
+    progress: 742,
+    maxProgress: 700,
+  },
+  {
+    id: 'b_05',
+    title: 'Algorithm Artisan',
+    description: 'Solve 10 data structures & algorithms challenges across Easy & Medium tiers.',
+    icon: 'Cpu',
+    category: 'Coding',
+    rarity: 'Epic',
+    unlocked: false,
+    progress: 4,
+    maxProgress: 10,
+  },
+  {
+    id: 'b_06',
+    title: 'Tier-1 Candidate',
+    description: 'Achieve a Placement Readiness Score of 850+ with 4 verified core skills.',
+    icon: 'Trophy',
+    category: 'Readiness',
+    rarity: 'Legendary',
+    unlocked: false,
+    progress: 742,
+    maxProgress: 850,
+  },
+  {
+    id: 'b_07',
+    title: 'Complete Profile Vanguard',
+    description: 'Fill in all academic details, portfolio GitHub, LinkedIn, and resume targets.',
+    icon: 'CheckCircle2',
+    category: 'Milestone',
+    rarity: 'Common',
+    unlocked: true,
+    unlockedAt: '2026-09-14',
+    progress: 1,
+    maxProgress: 1,
+  },
+  {
+    id: 'b_08',
+    title: 'Speed Demon',
+    description: 'Finish an aptitude test in under 60 seconds with 100% precision.',
+    icon: 'Zap',
+    category: 'Assessment',
+    rarity: 'Epic',
+    unlocked: false,
+    progress: 0,
+    maxProgress: 1,
+  },
+];
+
+export const INITIAL_ROADMAP: PersonalizedRoadmap = {
+  source: 'gemini',
+  lastUpdated: 'Today at 09:30 AM',
+  overview: 'Tailored 4-phase acceleration plan targeting High-Growth Tech Unicorns & Product Companies. Focuses on turning Dynamic Programming & Timed Quant Aptitude into interview strengths.',
+  strengths: ['Logical Reasoning (84%)', 'Array & Hash Techniques (82%)', 'Core Full-Stack Knowledge (80%)'],
+  focusGaps: ['Dynamic Programming & Recursion (48%)', 'Trees & Graph Traversal (60%)', 'Operating System Synchronization (64%)'],
+  phases: [
+    {
+      id: 'ph_1',
+      phase: 'Phase 1: High-Frequency DSA & Quant Pacing (Weeks 1 - 2)',
+      goal: 'Clear Tier-1 online screening cutoffs with high speed and zero penalty points.',
+      milestones: [
+        { id: 'm_11', title: 'Solve 10 Two-Pointer and Sliding Window LeetCode Mediums', completed: true, estimatedHours: 8 },
+        { id: 'm_12', title: 'Practice 30 Time & Work, Speed-Distance mental math shortcuts', completed: true, estimatedHours: 4 },
+        { id: 'm_13', title: 'Take 2 Full Timed Sectional Aptitude Drills', completed: false, estimatedHours: 2 },
+      ],
+      recommendedTools: ['Sectional Mock Arena', 'Quant Shortcut Flashcards'],
+      completionScoreTarget: '+35 pts',
+    },
+    {
+      id: 'ph_2',
+      phase: 'Phase 2: Tree Traversals & Recursion Mastery (Weeks 3 - 4)',
+      goal: 'Master recursive tree problems, LCA, diameter, and topological sort.',
+      milestones: [
+        { id: 'm_21', title: 'Implement BFS & DFS recursively and iteratively from scratch', completed: false, estimatedHours: 6 },
+        { id: 'm_22', title: 'Solve Lowest Common Ancestor & Binary Tree Max Path Sum', completed: false, estimatedHours: 5 },
+        { id: 'm_23', title: 'Understand Memoization patterns for 1D and 2D DP', completed: false, estimatedHours: 7 },
+      ],
+      recommendedTools: ['Tree Visualizer', 'Blind 75 Recursion Guide'],
+      completionScoreTarget: '+50 pts',
+    },
+    {
+      id: 'ph_3',
+      phase: 'Phase 3: Core CS & System Design Fundamentals (Weeks 5 - 6)',
+      goal: 'Ace technical interview round grilling on OS, DBMS, and high-concurrency systems.',
+      milestones: [
+        { id: 'm_31', title: 'Revise Semaphores, Mutexes, Deadlock Coffman conditions', completed: false, estimatedHours: 4 },
+        { id: 'm_32', title: 'Deep dive into Database Indexing: B+ Trees vs Hash Indices', completed: false, estimatedHours: 5 },
+        { id: 'm_33', title: 'Design a URL Shortener & Rate Limiter on whitepaper', completed: false, estimatedHours: 6 },
+      ],
+      recommendedTools: ['System Design Primer', 'OS Concurrency Labs'],
+      completionScoreTarget: '+45 pts',
+    },
+    {
+      id: 'ph_4',
+      phase: 'Phase 4: Full Placement Simulations & Behavioral Polish (Weeks 7 - 8)',
+      goal: 'Final sprint: peak performance, confidence, and STAR leadership stories.',
+      milestones: [
+        { id: 'm_41', title: 'Simulate 3 company-specific 90-minute online assessment tests', completed: false, estimatedHours: 6 },
+        { id: 'm_42', title: 'Prepare 5 STAR format stories for behavioral round questions', completed: false, estimatedHours: 3 },
+        { id: 'm_43', title: 'Conduct peer mock interview with real-time whiteboarding', completed: false, estimatedHours: 4 },
+      ],
+      recommendedTools: ['Mock Interview Partner Arena', 'STAR Story Bank'],
+      completionScoreTarget: '+60 pts',
+    },
+  ],
+};
+
+export const COMPANY_BENCHMARKS = [
+  {
+    name: 'Tier-1 Big Tech (Google, Microsoft, Amazon)',
+    cutoffScore: 820,
+    rounds: ['Online Assessment (2-3 Hard DSA)', 'Technical Round 1 (Trees/Graphs)', 'Technical Round 2 (DP/Systems)', 'Behavioral / Leadership (STAR)'],
+    hiringFocus: 'Algorithmic depth, clean modular code, edge case testing, time/space optimality.',
+    packageRange: '18 - 45 LPA',
+    difficultyColor: 'text-amber-600 bg-amber-50 border-amber-200',
+  },
+  {
+    name: 'High-Growth Tech Unicorns (Swiggy, Razorpay, Uber)',
+    cutoffScore: 750,
+    rounds: ['Coding & CS Core MCQ', 'Machine Coding / LLD Round', 'Problem Solving & DSA', 'Culture Fit & Engineering Manager'],
+    hiringFocus: 'Writing production-grade readable code, practical full stack instincts, fast turnaround.',
+    packageRange: '16 - 32 LPA',
+    difficultyColor: 'text-purple-600 bg-purple-50 border-purple-200',
+  },
+  {
+    name: 'Mid-Size Product Companies',
+    cutoffScore: 680,
+    rounds: ['Aptitude & Coding Combined', 'DSA & Project Deep Dive', 'System Fundamentals (OS/DBMS)', 'HR & Fitment'],
+    hiringFocus: 'Solid understanding of projects built, strong core fundamentals, good communication.',
+    packageRange: '8 - 18 LPA',
+    difficultyColor: 'text-blue-600 bg-blue-50 border-blue-200',
+  },
+  {
+    name: 'Global IT & Consulting (TCS Digital, Infosys SP, Cognizant)',
+    cutoffScore: 600,
+    rounds: ['Foundation Section (Quant + Reasoning + Verbal)', 'Advanced Coding (2 Problems)', 'Technical + Managerial Interview'],
+    hiringFocus: 'Speed and accuracy in aptitude rounds, clean basic DSA solutions, academic CGPA.',
+    packageRange: '4.5 - 9 LPA',
+    difficultyColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  },
+];
