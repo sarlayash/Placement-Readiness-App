@@ -416,19 +416,19 @@ export default function App() {
   const unlockedBadgeCount = badges.filter((b) => b.unlocked).length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans antialiased selection:bg-amber-400 selection:text-black">
       {/* Device Frame Wrapper (Togglable for simulated smartphone or responsive view) */}
       <div
         className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 ${
           isDeviceFrame
-            ? 'max-w-[430px] my-4 md:my-6 rounded-[40px] border-[8px] border-slate-800 shadow-2xl shadow-indigo-950/50 overflow-hidden relative min-h-[850px] bg-slate-950'
+            ? 'max-w-[430px] my-4 md:my-6 rounded-[40px] border-[8px] border-neutral-800 shadow-2xl shadow-amber-950/20 overflow-hidden relative min-h-[850px] bg-black'
             : 'max-w-2xl'
         }`}
       >
         {/* Device Frame Notch (when in device frame mode) */}
         {isDeviceFrame && (
-          <div className="w-32 h-4 bg-slate-800 rounded-b-xl mx-auto z-40 relative flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-slate-900 border border-slate-700" />
+          <div className="w-32 h-4 bg-neutral-800 rounded-b-xl mx-auto z-40 relative flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-black border border-neutral-700" />
           </div>
         )}
 

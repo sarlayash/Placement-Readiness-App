@@ -16,7 +16,12 @@ import {
   Award,
   Lightbulb,
   AlertTriangle,
-  Zap,
+  FileSpreadsheet,
+  Database,
+  BarChart3,
+  Bot,
+  MessageSquare,
+  Sparkle,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -24,6 +29,7 @@ import {
   CodingProblem,
   CodingSubmission,
   TestCaseResult,
+  AssessmentCategory,
 } from '../types';
 import { runJavaScriptProblem } from '../utils/codeRunner';
 import { SpinningWheelModal, WheelReward } from './SpinningWheelModal';
@@ -37,6 +43,8 @@ interface AssessmentsViewProps {
   defaultSubTab?: 'aptitude' | 'coding';
 }
 
+type ModuleFilter = 'all' | AssessmentCategory;
+
 export function AssessmentsView({
   questions,
   codingProblems,
@@ -46,13 +54,14 @@ export function AssessmentsView({
   defaultSubTab = 'aptitude',
 }: AssessmentsViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding'>(defaultSubTab);
+  const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
 
   // Aptitude state
   const [isTestActive, setIsTestActive] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [markedForReview, setMarkedForReview] = useState<Record<string, boolean>>({});
-  const [secondsRemaining, setSecondsRemaining] = useState(600); // 10 minutes
+  const [secondsRemaining, setSecondsRemaining] = useState(600);
   const [testResult, setTestResult] = useState<AptitudeAssessmentResult | null>(null);
   const [showReviewExplanations, setShowReviewExplanations] = useState(false);
   const [scratchpad, setScratchpad] = useState('');
@@ -90,6 +99,12 @@ export function AssessmentsView({
   } | null>(null);
   const [submissionSuccessModal, setSubmissionSuccessModal] = useState<boolean>(false);
 
+  // Filtered questions based on selected module
+  const activeQuestions =
+    selectedModule === 'all'
+      ? questions
+      : questions.filter((q) => q.category === selectedModule);
+
   const selectedProblem = codingProblems.find((p) => p.id === selectedProblemId) || codingProblems[0];
 
   // Initialize starter code when problem or language changes
@@ -99,11 +114,11 @@ export function AssessmentsView({
       setTestResults(null);
       setAiReview(null);
     }
-  }, [selectedProblemId, selectedLanguage]);
+  }, [selectedProblemId, selectedLanguage, selectedProblem]);
 
-  // Aptitude timer
+  // Test countdown timer
   useEffect(() => {
-    if (isTestActive && secondsRemaining > 0) {
+    if (isTestActive) {
       timerRef.current = setInterval(() => {
         setSecondsRemaining((prev) => {
           if (prev <= 1) {
@@ -118,13 +133,14 @@ export function AssessmentsView({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isTestActive, secondsRemaining]);
+  }, [isTestActive]);
 
   const handleStartAptitudeTest = () => {
     setSelectedAnswers({});
     setMarkedForReview({});
     setCurrentQuestionIndex(0);
-    setSecondsRemaining(questions.length * 75); // 75 seconds per question
+    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    setSecondsRemaining(pool.length * 75);
     setTestResult(null);
     setShowReviewExplanations(false);
     // Reset spinning wheel state
@@ -137,7 +153,9 @@ export function AssessmentsView({
   };
 
   const handleRewardSelected = (reward: WheelReward) => {
-    const currentQ = questions[currentQuestionIndex];
+    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const currentQ = pool[currentQuestionIndex];
+    if (!currentQ) return;
     setWheelReward(reward);
     setWheelQuestionId(currentQ.id);
 
@@ -152,27 +170,31 @@ export function AssessmentsView({
   };
 
   const handleSelectAnswer = (optionIndex: number) => {
-    const qId = questions[currentQuestionIndex].id;
-    setSelectedAnswers((prev) => ({ ...prev, [qId]: optionIndex }));
+    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const currentQ = pool[currentQuestionIndex];
+    if (!currentQ) return;
+    setSelectedAnswers((prev) => ({ ...prev, [currentQ.id]: optionIndex }));
   };
 
   const handleToggleMarkReview = () => {
-    const qId = questions[currentQuestionIndex].id;
-    setMarkedForReview((prev) => ({ ...prev, [qId]: !prev[qId] }));
+    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const currentQ = pool[currentQuestionIndex];
+    if (!currentQ) return;
+    setMarkedForReview((prev) => ({ ...prev, [currentQ.id]: !prev[currentQ.id] }));
   };
 
   const handleFinishTest = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsTestActive(false);
 
+    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
     let correctCount = 0;
-    const catScores = {
-      quantitative: { correct: 0, total: 0 },
-      logical: { correct: 0, total: 0 },
-      verbal: { correct: 0, total: 0 },
-    };
+    const catScores: Record<string, { correct: number; total: number }> = {};
 
-    questions.forEach((q) => {
+    pool.forEach((q) => {
+      if (!catScores[q.category]) {
+        catScores[q.category] = { correct: 0, total: 0 };
+      }
       catScores[q.category].total += 1;
       if (selectedAnswers[q.id] === q.correctIndex) {
         correctCount += 1;
@@ -180,16 +202,14 @@ export function AssessmentsView({
       }
     });
 
-    const scorePct = Math.round((correctCount / questions.length) * 100);
-    const timeSpent = questions.length * 75 - secondsRemaining;
+    const scorePct = Math.round((correctCount / pool.length) * 100);
+    const timeSpent = pool.length * 75 - secondsRemaining;
     let pointsDelta = Math.round(scorePct * 0.35) + 10;
 
-    // Handle Spinning Wheel Double Bonus logic:
-    // Rule: Double bonus is awarded ONLY if the question was answered correctly.
-    // Rule: Wrong answer strictly removes & forfeits all bonus points!
+    // Double bonus logic: strictly awarded if question was correct; 0 bonus on wrong answer!
     if (wheelReward && wheelQuestionId) {
-      const qIndex = questions.findIndex((q) => q.id === wheelQuestionId);
-      const targetQ = questions[qIndex];
+      const qIndex = pool.findIndex((q) => q.id === wheelQuestionId);
+      const targetQ = pool[qIndex];
       const isCorrect = targetQ && selectedAnswers[wheelQuestionId] === targetQ.correctIndex;
 
       if (isCorrect) {
@@ -203,14 +223,14 @@ export function AssessmentsView({
           bonusPoints,
         });
       } else {
-        // REMOVE BONUS FOR WRONG ANSWERS: 0 bonus points awarded!
+        // FORFEIT BONUS FOR WRONG ANSWER
         setWheelBonusSummary({
           applied: true,
           won: false,
           reward: wheelReward,
           questionIndex: qIndex,
           bonusPoints: 0,
-          reason: 'Incorrect answer on wheel MCQ forfeited the bonus points',
+          reason: 'Incorrect answer on wheel MCQ forfeited double bonus points',
         });
       }
     } else {
@@ -218,13 +238,13 @@ export function AssessmentsView({
     }
 
     const result: AptitudeAssessmentResult = {
-      id: `apt_res_${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      totalQuestions: questions.length,
-      correctAnswers: correctCount,
+      id: `res_${Date.now()}`,
+      date: new Date().toISOString(),
       scorePercentage: scorePct,
-      timeSpentSeconds: timeSpent,
+      correctAnswers: correctCount,
+      totalQuestions: pool.length,
       categoryScores: catScores,
+      timeSpentSeconds: timeSpent > 0 ? timeSpent : 30,
       readinessPointsDelta: pointsDelta,
     };
 
@@ -232,7 +252,6 @@ export function AssessmentsView({
     onCompleteAptitude(result);
   };
 
-  // Run JavaScript Test Cases
   const handleRunTestCases = () => {
     setIsRunningCode(true);
     setTimeout(() => {
@@ -240,7 +259,6 @@ export function AssessmentsView({
         const results = runJavaScriptProblem(selectedProblem, userCode);
         setTestResults(results);
       } else {
-        // Multi-language evaluation simulation
         const results = selectedProblem.testCases.map((tc) => ({
           testCaseId: tc.id,
           input: tc.input,
@@ -255,7 +273,6 @@ export function AssessmentsView({
     }, 400);
   };
 
-  // Submit coding problem
   const handleSubmitCode = async () => {
     setIsRunningCode(true);
     let results: TestCaseResult[] = [];
@@ -294,7 +311,6 @@ export function AssessmentsView({
     }
   };
 
-  // Request AI code analysis from server
   const handleRequestAiReview = async () => {
     setIsRequestingAiReview(true);
     try {
@@ -331,94 +347,172 @@ export function AssessmentsView({
     return `${mins}:${rem < 10 ? '0' : ''}${rem}`;
   };
 
+  // Assessment Modules List
+  const modulesList: { id: ModuleFilter; label: string; icon: any; count: number }[] = [
+    { id: 'all', label: 'All Modules', icon: Sparkles, count: questions.length },
+    { id: 'verbal', label: 'Verbal Ability', icon: MessageSquare, count: questions.filter(q => q.category === 'verbal').length },
+    { id: 'soft_skills', label: 'Soft Skills', icon: Award, count: questions.filter(q => q.category === 'soft_skills').length },
+    { id: 'coding', label: 'Coding MCQs', icon: Code2, count: questions.filter(q => q.category === 'coding').length },
+    { id: 'excel', label: 'Excel Modeling', icon: FileSpreadsheet, count: questions.filter(q => q.category === 'excel').length },
+    { id: 'sql', label: 'SQL Queries', icon: Database, count: questions.filter(q => q.category === 'sql').length },
+    { id: 'power_bi', label: 'Power BI & DAX', icon: BarChart3, count: questions.filter(q => q.category === 'power_bi').length },
+    { id: 'ai', label: 'AI & ML Foundational', icon: Bot, count: questions.filter(q => q.category === 'ai').length },
+    { id: 'generative_ai', label: 'Generative AI', icon: Sparkle, count: questions.filter(q => q.category === 'generative_ai').length },
+    { id: 'agentic_ai', label: 'Agentic AI', icon: BrainCircuit, count: questions.filter(q => q.category === 'agentic_ai').length },
+    { id: 'quantitative', label: 'Quantitative Aptitude', icon: BrainCircuit, count: questions.filter(q => q.category === 'quantitative').length },
+    { id: 'logical', label: 'Logical Reasoning', icon: BrainCircuit, count: questions.filter(q => q.category === 'logical').length },
+  ];
+
+  const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+  const currentQ = pool[currentQuestionIndex] || pool[0];
+
   return (
-    <div className="space-y-4 pb-20 max-w-lg mx-auto">
-      {/* Sub Tab Switcher: Aptitude vs Coding */}
-      <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+    <div className="space-y-4 pb-20 max-w-lg mx-auto text-white">
+      {/* Primary Sub-Tab Switcher: Assessments vs Coding Arena */}
+      <div className="flex bg-black p-1 rounded-2xl border-2 border-amber-500/40 shadow-lg">
         <button
           id="assessment-tab-aptitude"
           onClick={() => setActiveSubTab('aptitude')}
-          className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeSubTab === 'aptitude'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
+              : 'text-neutral-400 hover:text-white'
           }`}
         >
-          <BrainCircuit className="w-4 h-4" />
-          <span>Aptitude Assessments</span>
+          <BrainCircuit className="w-4 h-4 stroke-[2.5]" />
+          <span>Assessments Portal</span>
         </button>
         <button
           id="assessment-tab-coding"
           onClick={() => setActiveSubTab('coding')}
-          className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeSubTab === 'coding'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
+              : 'text-neutral-400 hover:text-white'
           }`}
         >
-          <Code2 className="w-4 h-4" />
+          <Code2 className="w-4 h-4 stroke-[2.5]" />
           <span>Coding Arena</span>
         </button>
       </div>
 
       {/* ============================================================== */}
-      {/* SUB-TAB 1: APTITUDE ASSESSMENT ENGINE */}
+      {/* SUB-TAB 1: ASSESSMENT MODULES & EXAM ENGINE */}
       {/* ============================================================== */}
       {activeSubTab === 'aptitude' && (
         <div className="space-y-4">
+          {/* Module Selector Chips (Verbal, Soft Skills, Coding, Excel, SQL, Power BI, AI, GenAI, Agentic AI) */}
           {!isTestActive && !testResult && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  <BrainCircuit className="w-5 h-5" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+                  Select Assessment Module
                 </span>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-100">
-                    Comprehensive Placement Aptitude Drill
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Quantitative, Logical Reasoning & Technical Comprehension
-                  </p>
+                <span className="text-[10px] text-neutral-400 font-medium">
+                  {modulesList.length} Tracks Available
+                </span>
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {modulesList.map((m) => {
+                  const Icon = m.icon;
+                  const isSelected = selectedModule === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setSelectedModule(m.id);
+                        setCurrentQuestionIndex(0);
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold border transition-all shrink-0 cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
+                          : 'bg-black border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-neutral-500'}`} />
+                      <span>{m.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${isSelected ? 'bg-amber-400 text-black' : 'bg-neutral-900 text-neutral-400'}`}>
+                        {m.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Assessment Overview / Launch Card */}
+          {!isTestActive && !testResult && (
+            <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-5 shadow-xl space-y-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                    <BrainCircuit className="w-5 h-5 text-black stroke-[2.5]" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
+                      {selectedModule === 'all'
+                        ? 'Comprehensive Placement Assessment'
+                        : `${modulesList.find((m) => m.id === selectedModule)?.label} Assessment`}
+                    </h3>
+                    <p className="text-[11px] text-neutral-300 mt-0.5">
+                      Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded border border-amber-500/40">
+                  {pool.length} Qs
+                </span>
+              </div>
+
+              {/* Assessment Stats Strip */}
+              <div className="grid grid-cols-3 gap-2 py-1 relative z-10">
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Questions</span>
+                  <span className="text-sm font-black text-white">{pool.length} Items</span>
+                </div>
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Duration</span>
+                  <span className="text-sm font-black text-amber-300">{Math.round((pool.length * 75) / 60)} Mins</span>
+                </div>
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Wheel Bonus</span>
+                  <span className="text-sm font-black text-amber-400">2x Double Bonus</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 py-2">
-                <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Questions</span>
-                  <span className="text-sm font-bold text-slate-200">{questions.length} Items</span>
+              {/* Assessment Rules */}
+              <div className="space-y-1.5 text-xs text-neutral-300 bg-neutral-950 p-3.5 rounded-xl border border-amber-500/30 relative z-10">
+                <div className="font-extrabold text-amber-300 mb-1 uppercase tracking-wider text-[10px]">
+                  Official Assessment Guidelines:
                 </div>
-                <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Time Limit</span>
-                  <span className="text-sm font-bold text-slate-200">{Math.round((questions.length * 75) / 60)} Mins</span>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Timed evaluation with official SarlaYash Mission certification standard.</span>
                 </div>
-                <div className="bg-slate-800/50 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Readiness</span>
-                  <span className="text-sm font-bold text-emerald-400">+45 Pts Max</span>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Spinning Wheel available for 1 MCQ to unlock <strong>Double Bonus (2x)</strong>.</span>
                 </div>
-              </div>
-
-              <div className="space-y-1.5 text-xs text-slate-300 bg-slate-800/30 p-3 rounded-xl border border-slate-800">
-                <div className="font-semibold text-slate-200 mb-1">Assessment Guidelines:</div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Timed under real online assessment test constraints</span>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span><strong>Important rule:</strong> Wrong answer strictly removes bonus points (0 pts awarded).</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>You can flag questions and navigate anytime</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Includes built-in calculation scratchpad</span>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Earn credentials downloadable in <strong>PNG format only</strong>.</span>
                 </div>
               </div>
 
+              {/* Launch Button */}
               <button
                 id="start-aptitude-test-btn"
                 onClick={handleStartAptitudeTest}
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 transition-all"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer relative z-10 active:scale-95"
               >
-                <Play className="w-4 h-4 fill-white" />
+                <Play className="w-4 h-4 fill-black stroke-black" />
                 <span>Launch Timed Assessment</span>
               </button>
             </div>
@@ -426,42 +520,42 @@ export function AssessmentsView({
 
           {/* ACTIVE TEST RUNNER */}
           {isTestActive && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm space-y-4">
+            <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl space-y-4">
               {/* Header: Question counter, category pill, timer */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-900">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    Q {currentQuestionIndex + 1} of {questions.length}
+                  <span className="text-xs font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    Q {currentQuestionIndex + 1} of {pool.length}
                   </span>
-                  <span className="text-[11px] font-medium text-slate-400 capitalize">
-                    {questions[currentQuestionIndex].topic}
+                  <span className="text-[11px] font-bold text-neutral-300 capitalize">
+                    {currentQ.topic}
                   </span>
                 </div>
 
                 <div
-                  className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${
+                  className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full ${
                     secondsRemaining < 60
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse'
-                      : 'bg-slate-800 text-slate-200 border border-slate-700'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 animate-pulse'
+                      : 'bg-neutral-900 text-amber-300 border border-amber-500/40'
                   }`}
                 >
-                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
                   <span>{formatTime(secondsRemaining)}</span>
                 </div>
               </div>
 
               {/* Question Navigation Drawer / Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                {questions.map((q, idx) => {
+                {pool.map((q, idx) => {
                   const isAnswered = selectedAnswers[q.id] !== undefined;
                   const isMarked = markedForReview[q.id];
                   const isCurrent = idx === currentQuestionIndex;
                   const hasWheelBonus = wheelQuestionId === q.id;
 
-                  let chipStyle = 'bg-slate-800 text-slate-400 border-slate-700';
-                  if (isCurrent) chipStyle = 'ring-2 ring-indigo-400 bg-indigo-900 text-white border-indigo-400';
-                  else if (isMarked) chipStyle = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-                  else if (isAnswered) chipStyle = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+                  let chipStyle = 'bg-neutral-900 text-neutral-400 border-neutral-800';
+                  if (isCurrent) chipStyle = 'ring-2 ring-amber-400 bg-amber-500/30 text-amber-200 border-amber-400 font-black';
+                  else if (isMarked) chipStyle = 'bg-neutral-800 text-amber-300 border-amber-500/50';
+                  else if (isAnswered) chipStyle = 'bg-neutral-900 text-white border-amber-500/40';
 
                   return (
                     <button
@@ -471,7 +565,7 @@ export function AssessmentsView({
                     >
                       {idx + 1}
                       {hasWheelBonus && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-slate-900" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-black" />
                       )}
                     </button>
                   );
@@ -480,21 +574,21 @@ export function AssessmentsView({
 
               {/* SPINNING WHEEL FOR 1 MCQ BANNER & CONTROLS */}
               {!wheelReward ? (
-                <div className="bg-gradient-to-r from-amber-500/15 via-slate-800/80 to-indigo-500/15 border border-amber-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                <div className="bg-gradient-to-r from-amber-500/20 via-neutral-900 to-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 flex items-center justify-center font-black text-sm shadow-md animate-bounce">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-black flex items-center justify-center font-black text-sm shadow-md animate-bounce">
                       🎡
                     </div>
                     <div className="text-left">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-extrabold text-amber-300">
+                        <span className="text-xs font-black text-amber-300">
                           Spin the Wheel for MCQ #{currentQuestionIndex + 1}
                         </span>
-                        <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold border border-amber-500/30">
+                        <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-extrabold border border-amber-500/40">
                           1 Chance
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-300 mt-0.5">
+                      <p className="text-[10px] text-neutral-300 mt-0.5">
                         Spin for <strong className="text-amber-300">Double Bonus (2x Points)</strong>! Wrong answer removes bonus.
                       </p>
                     </div>
@@ -502,14 +596,14 @@ export function AssessmentsView({
                   <button
                     id="spin-wheel-for-mcq-btn"
                     onClick={() => setShowWheelModal(true)}
-                    className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/20 transition-all shrink-0"
+                    className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/20 transition-all shrink-0 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Spin</span>
                   </button>
                 </div>
-              ) : wheelQuestionId === questions[currentQuestionIndex].id ? (
-                <div className="bg-slate-950/80 border-2 border-amber-500/50 rounded-xl p-3 space-y-2 shadow-sm">
+              ) : wheelQuestionId === currentQ.id ? (
+                <div className="bg-black border-2 border-amber-500/50 rounded-xl p-3 space-y-2 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🎡</span>
@@ -517,75 +611,75 @@ export function AssessmentsView({
                         <span className="text-xs font-black text-amber-300 block">
                           Wheel Bonus Attached: {wheelReward.label} (+{wheelReward.bonusPoints} Pts)
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-neutral-400">
                           Active for Question #{currentQuestionIndex + 1}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
                       {wheelReward.multiplier}x Multiplier
                     </span>
                   </div>
 
                   {/* Real-time Status feedback on this question */}
-                  {selectedAnswers[questions[currentQuestionIndex].id] === undefined ? (
-                    <div className="flex items-center gap-1.5 text-[11px] text-amber-200/90 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                  {selectedAnswers[currentQ.id] === undefined ? (
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-200 bg-amber-500/10 p-2 rounded-lg border border-amber-500/30">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                       <span>
-                        Answer correctly to lock in <strong>+{wheelReward.bonusPoints} bonus points</strong>. Any wrong answer immediately removes the bonus!
+                        Answer correctly to lock in <strong>+{wheelReward.bonusPoints} bonus points</strong>. Wrong answer removes bonus!
                       </span>
                     </div>
-                  ) : selectedAnswers[questions[currentQuestionIndex].id] === questions[currentQuestionIndex].correctIndex ? (
-                    <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 bg-emerald-500/15 p-2 rounded-lg border border-emerald-500/30">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : selectedAnswers[currentQ.id] === currentQ.correctIndex ? (
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-300 bg-amber-500/20 p-2 rounded-lg border border-amber-400">
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
                       <span>
-                        <strong>Correct Answer!</strong> Double Bonus Secured: <strong>+{wheelReward.bonusPoints} points</strong> will be added to your score!
+                        <strong>Correct Answer!</strong> Double Bonus Secured: <strong>+{wheelReward.bonusPoints} points</strong> added!
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 text-[11px] text-rose-300 bg-rose-500/15 p-2 rounded-lg border border-rose-500/30">
                       <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
                       <span>
-                        <strong>Wrong Answer!</strong> Bonus removed: <strong>0 bonus points</strong> awarded per rule.
+                        <strong>Wrong Answer!</strong> Bonus removed: <strong>0 bonus points</strong> per rule.
                       </span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-[10px] text-slate-400 bg-slate-800/30 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center justify-between">
+                <div className="text-[10px] text-neutral-400 bg-neutral-950 px-3 py-1.5 rounded-lg border border-neutral-800 flex items-center justify-between">
                   <span>
-                    Wheel bonus was applied to <strong>Question #{questions.findIndex((q) => q.id === wheelQuestionId) + 1}</strong>
+                    Wheel bonus applied to <strong>Question #{pool.findIndex((q) => q.id === wheelQuestionId) + 1}</strong>
                   </span>
                   <span className="text-amber-400 font-bold">{wheelReward.label}</span>
                 </div>
               )}
 
               {/* Question Statement */}
-              <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-                <p className="text-xs sm:text-sm font-medium text-slate-100 whitespace-pre-line leading-relaxed">
-                  {questions[currentQuestionIndex].question}
+              <div className="bg-neutral-950 p-4 rounded-xl border border-amber-500/30">
+                <p className="text-xs sm:text-sm font-medium text-white whitespace-pre-line leading-relaxed">
+                  {currentQ.question}
                 </p>
               </div>
 
               {/* Options */}
               <div className="space-y-2">
-                {questions[currentQuestionIndex].options.map((option, optIdx) => {
-                  const isSelected = selectedAnswers[questions[currentQuestionIndex].id] === optIdx;
-                  const isEliminated = eliminatedOptions[questions[currentQuestionIndex].id]?.includes(optIdx);
+                {currentQ.options.map((option, optIdx) => {
+                  const isSelected = selectedAnswers[currentQ.id] === optIdx;
+                  const isEliminated = eliminatedOptions[currentQ.id]?.includes(optIdx);
 
                   if (isEliminated) {
                     return (
                       <div
                         key={optIdx}
-                        className="w-full text-left p-3 rounded-xl text-xs font-medium border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-50"
+                        className="w-full text-left p-3 rounded-xl text-xs font-medium border border-neutral-900 bg-neutral-950 text-neutral-600 flex items-center justify-between cursor-not-allowed opacity-40"
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-slate-800 text-slate-600">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-neutral-800 text-neutral-600">
                             {String.fromCharCode(65 + optIdx)}
                           </span>
                           <span className="line-through">{option}</span>
                         </div>
-                        <span className="text-[9px] uppercase font-bold text-slate-600 bg-slate-800/40 px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] uppercase font-bold text-neutral-600 bg-neutral-900 px-1.5 py-0.5 rounded">
                           50-50 Eliminated
                         </span>
                       </div>
@@ -597,35 +691,35 @@ export function AssessmentsView({
                       key={optIdx}
                       id={`option-btn-${optIdx}`}
                       onClick={() => handleSelectAnswer(optIdx)}
-                      className={`w-full text-left p-3 rounded-xl text-xs font-medium border transition-all flex items-center justify-between ${
+                      className={`w-full text-left p-3.5 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between cursor-pointer ${
                         isSelected
-                          ? 'bg-indigo-600/20 border-indigo-500 text-indigo-100 shadow-sm'
-                          : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'
+                          ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-sm shadow-amber-500/10'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:bg-neutral-900 hover:border-neutral-700'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <span
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
                             isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-500'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                              ? 'bg-amber-400 text-black border-amber-400'
+                              : 'bg-neutral-900 text-neutral-400 border-neutral-700'
                           }`}
                         >
                           {String.fromCharCode(65 + optIdx)}
                         </span>
                         <span>{option}</span>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
+                      {isSelected && <Check className="w-4 h-4 text-amber-400 stroke-[2.5]" />}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Scratchpad Accordion */}
+              {/* Calculation Scratchpad */}
               <div>
                 <button
                   onClick={() => setShowScratchpad(!showScratchpad)}
-                  className="text-[11px] text-slate-400 hover:text-slate-300 flex items-center gap-1 font-medium"
+                  className="text-[11px] text-neutral-400 hover:text-amber-300 flex items-center gap-1 font-semibold transition-colors"
                 >
                   <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
                   <span>{showScratchpad ? 'Hide Scratchpad' : 'Open Calculation Scratchpad'}</span>
@@ -634,23 +728,23 @@ export function AssessmentsView({
                   <textarea
                     value={scratchpad}
                     onChange={(e) => setScratchpad(e.target.value)}
-                    placeholder="Scratch notes, rough math calculations..."
-                    className="w-full mt-2 h-20 p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                    placeholder="Scratch notes, mathematical workings..."
+                    className="w-full mt-2 h-20 p-2.5 bg-black border border-amber-500/30 rounded-xl text-xs text-amber-200 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-400 font-mono"
                   />
                 )}
               </div>
 
-              {/* Bottom Controls */}
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+              {/* Bottom Navigation Controls */}
+              <div className="pt-3 border-t border-neutral-900 flex items-center justify-between gap-2">
                 <button
                   onClick={handleToggleMarkReview}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium border flex items-center gap-1.5 transition-colors ${
-                    markedForReview[questions[currentQuestionIndex].id]
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    markedForReview[currentQ.id]
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-400'
+                      : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
                   }`}
                 >
-                  <BookmarkCheck className="w-3.5 h-3.5" />
+                  <BookmarkCheck className="w-3.5 h-3.5 text-amber-400" />
                   <span>Flag</span>
                 </button>
 
@@ -658,15 +752,15 @@ export function AssessmentsView({
                   <button
                     disabled={currentQuestionIndex === 0}
                     onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                    className="p-2 rounded-xl bg-neutral-900 text-neutral-300 hover:bg-neutral-800 disabled:opacity-40 transition-colors border border-neutral-800"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
 
-                  {currentQuestionIndex < questions.length - 1 ? (
+                  {currentQuestionIndex < pool.length - 1 ? (
                     <button
                       onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
-                      className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all shadow-sm shadow-amber-500/20 cursor-pointer"
                     >
                       <span>Next</span>
                       <ChevronRight className="w-4 h-4" />
@@ -675,9 +769,9 @@ export function AssessmentsView({
                     <button
                       id="submit-test-button"
                       onClick={handleFinishTest}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold tracking-wide transition-colors shadow-sm"
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 hover:from-amber-300 hover:to-amber-100 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/30 cursor-pointer"
                     >
-                      Submit Test
+                      Submit Assessment
                     </button>
                   )}
                 </div>
@@ -685,55 +779,57 @@ export function AssessmentsView({
             </div>
           )}
 
-          {/* TEST RESULTS CARD */}
+          {/* TEST RESULTS CARD (Black & Gold) */}
           {testResult && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <Award className="w-5 h-5" />
+            <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-5 shadow-xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-900">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    <Award className="w-5 h-5 text-amber-400" />
                   </span>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100">
+                    <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
                       Assessment Diagnostics Complete
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      Score recorded in Placement Readiness Index
+                    <p className="text-[11px] text-neutral-400">
+                      Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/40">
                   +{testResult.readinessPointsDelta} PRS pts
                 </span>
               </div>
 
               {/* Metrics Grid */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Score</span>
-                  <span className="text-lg font-extrabold text-indigo-400">{testResult.scorePercentage}%</span>
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Score</span>
+                  <span className="text-lg font-black text-amber-300">{testResult.scorePercentage}%</span>
                 </div>
-                <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Correct</span>
-                  <span className="text-lg font-extrabold text-emerald-400">
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Correct</span>
+                  <span className="text-lg font-black text-white">
                     {testResult.correctAnswers} / {testResult.totalQuestions}
                   </span>
                 </div>
-                <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-800 text-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Time</span>
-                  <span className="text-lg font-extrabold text-amber-400">
+                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Time</span>
+                  <span className="text-lg font-black text-amber-400">
                     {formatTime(testResult.timeSpentSeconds)}
                   </span>
                 </div>
               </div>
 
               {/* Category Breakdown */}
-              <div className="bg-slate-800/20 p-3 rounded-xl border border-slate-800 space-y-2">
-                <div className="text-xs font-semibold text-slate-300 mb-1">Sectional Performance</div>
+              <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
+                <div className="text-xs font-black text-amber-300 uppercase tracking-wider mb-1">
+                  Sectional Performance Breakdown
+                </div>
                 {Object.entries(testResult.categoryScores).map(([cat, val]) => (
-                  <div key={cat} className="flex justify-between text-xs text-slate-400">
-                    <span className="capitalize">{cat}</span>
-                    <span className="font-semibold text-slate-200">
+                  <div key={cat} className="flex justify-between text-xs text-neutral-300 border-b border-neutral-900 pb-1">
+                    <span className="capitalize text-neutral-400">{cat.replace(/_/g, ' ')}</span>
+                    <span className="font-bold text-white">
                       {val.correct} of {val.total} ({val.total > 0 ? Math.round((val.correct / val.total) * 100) : 0}%)
                     </span>
                   </div>
@@ -745,8 +841,8 @@ export function AssessmentsView({
                 <div
                   className={`p-3 rounded-xl border flex items-start gap-3 ${
                     wheelBonusSummary.won
-                      ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                      : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+                      ? 'bg-neutral-950 border-amber-400 text-amber-200'
+                      : 'bg-neutral-950 border-rose-500/40 text-rose-200'
                   }`}
                 >
                   <div className="text-xl">
@@ -754,13 +850,13 @@ export function AssessmentsView({
                   </div>
                   <div className="flex-1 text-xs space-y-0.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold">
+                      <span className="font-black text-white">
                         Lucky Wheel Spin (MCQ #{wheelBonusSummary.questionIndex + 1})
                       </span>
                       <span
                         className={`font-black px-2 py-0.5 rounded text-[10px] uppercase ${
                           wheelBonusSummary.won
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                             : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                         }`}
                       >
@@ -769,10 +865,10 @@ export function AssessmentsView({
                           : 'Bonus Forfeited (0 Pts)'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 mt-1">
+                    <p className="text-[11px] text-neutral-300 mt-1">
                       {wheelBonusSummary.won
-                        ? `Congratulations! You answered Question #${wheelBonusSummary.questionIndex + 1} correctly and secured your ${wheelBonusSummary.reward.label} (+${wheelBonusSummary.bonusPoints} points)!`
-                        : `Question #${wheelBonusSummary.questionIndex + 1} was answered incorrectly. Per assessment rules, the double bonus was removed and 0 bonus points were awarded.`}
+                        ? `Secured ${wheelBonusSummary.reward.label} (+${wheelBonusSummary.bonusPoints} points) on Question #${wheelBonusSummary.questionIndex + 1}!`
+                        : `Question #${wheelBonusSummary.questionIndex + 1} was answered incorrectly. Per rule, double bonus was forfeited and 0 bonus points were awarded.`}
                     </p>
                   </div>
                 </div>
@@ -783,14 +879,14 @@ export function AssessmentsView({
                 <button
                   id="review-answers-btn"
                   onClick={() => setShowReviewExplanations(!showReviewExplanations)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold border border-neutral-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <HelpCircle className="w-4 h-4 text-indigo-400" />
-                  <span>{showReviewExplanations ? 'Hide Step-by-Step Solutions' : 'Review Step-by-Step Solutions'}</span>
+                  <HelpCircle className="w-4 h-4 text-amber-400" />
+                  <span>{showReviewExplanations ? 'Hide Solutions' : 'Review Step-by-Step Solutions'}</span>
                 </button>
                 <button
                   onClick={handleStartAptitudeTest}
-                  className="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Retake</span>
@@ -800,38 +896,38 @@ export function AssessmentsView({
               {/* Detailed Solutions Accordion */}
               {showReviewExplanations && (
                 <div className="space-y-3 pt-2">
-                  {questions.map((q, idx) => {
+                  {pool.map((q, idx) => {
                     const studentAns = selectedAnswers[q.id];
                     const isCorrect = studentAns === q.correctIndex;
                     return (
                       <div
                         key={q.id}
-                        className={`p-3 rounded-xl border text-xs space-y-1.5 ${
+                        className={`p-3.5 rounded-xl border text-xs space-y-2 ${
                           isCorrect
-                            ? 'bg-emerald-950/20 border-emerald-500/30'
-                            : 'bg-rose-950/20 border-rose-500/30'
+                            ? 'bg-neutral-950 border-amber-500/40'
+                            : 'bg-neutral-950 border-rose-500/40'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span className="font-bold text-slate-200">
+                          <span className="font-bold text-white">
                             Q{idx + 1}. {q.topic}
                           </span>
                           {isCorrect ? (
-                            <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Correct
+                            <span className="flex items-center gap-1 text-[11px] text-amber-400 font-black">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" /> Correct
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[11px] text-rose-400 font-semibold">
-                              <XCircle className="w-3.5 h-3.5" /> Incorrect
+                            <span className="flex items-center gap-1 text-[11px] text-rose-400 font-bold">
+                              <XCircle className="w-3.5 h-3.5 text-rose-400" /> Incorrect
                             </span>
                           )}
                         </div>
-                        <p className="text-slate-300">{q.question}</p>
-                        <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
-                          <span className="font-semibold text-emerald-400">Correct Answer:</span>{' '}
+                        <p className="text-neutral-300">{q.question}</p>
+                        <div className="text-[11px] text-neutral-400 pt-1 border-t border-neutral-900">
+                          <span className="font-bold text-amber-300">Correct Answer:</span>{' '}
                           {q.options[q.correctIndex]}
                         </div>
-                        <div className="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-lg font-mono whitespace-pre-line">
+                        <div className="text-[11px] text-neutral-300 bg-black p-2.5 rounded-lg font-mono whitespace-pre-line border border-neutral-800">
                           {q.explanation}
                         </div>
                       </div>
@@ -845,14 +941,14 @@ export function AssessmentsView({
       )}
 
       {/* ============================================================== */}
-      {/* SUB-TAB 2: CODING ASSESSMENT ARENA */}
+      {/* SUB-TAB 2: CODING ASSESSMENT ARENA (Black, White & Gold) */}
       {/* ============================================================== */}
       {activeSubTab === 'coding' && (
         <div className="space-y-4">
           {/* Problem Selector Bar */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase text-slate-400 mb-2">
-              Select Placement Challenge
+          <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-3.5 shadow-xl">
+            <div className="text-[11px] font-black uppercase tracking-wider text-amber-300 mb-2">
+              Select Placement Coding Challenge
             </div>
             <div className="grid grid-cols-2 gap-2">
               {codingProblems.map((prob) => {
@@ -865,30 +961,30 @@ export function AssessmentsView({
                   <button
                     key={prob.id}
                     onClick={() => setSelectedProblemId(prob.id)}
-                    className={`p-2.5 rounded-xl text-left border transition-all ${
+                    className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-indigo-600/20 border-indigo-500 shadow-sm'
-                        : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800'
+                        ? 'bg-amber-500/20 border-amber-400 shadow-md shadow-amber-500/10'
+                        : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                        className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
                           prob.difficulty === 'Easy'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            : 'bg-amber-500/25 text-amber-200 border border-amber-400 font-extrabold'
                         }`}
                       >
                         {prob.difficulty}
                       </span>
                       {isSolved && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                       )}
                     </div>
-                    <div className="text-xs font-semibold text-slate-200 mt-1 truncate">
+                    <div className="text-xs font-bold text-white mt-1 truncate">
                       {prob.title}
                     </div>
-                    <div className="text-[10px] text-slate-400">{prob.category}</div>
+                    <div className="text-[10px] text-neutral-400">{prob.category}</div>
                   </button>
                 );
               })}
@@ -896,29 +992,29 @@ export function AssessmentsView({
           </div>
 
           {/* Active Problem Workspace */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm space-y-4">
+          <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl space-y-4">
             {/* Problem Header */}
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                  <Code2 className="w-4 h-4 text-indigo-400" />
+                <h3 className="text-sm font-black text-amber-300 flex items-center gap-1.5">
+                  <Code2 className="w-4 h-4 text-amber-400" />
                   <span>{selectedProblem.title}</span>
                 </h3>
-                <span className="text-xs text-slate-400 font-mono">
-                  Target: {selectedProblem.targetTimeComplexity}
+                <span className="text-xs text-neutral-400 font-mono">
+                  Target: <strong className="text-amber-300">{selectedProblem.targetTimeComplexity}</strong>
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-2 whitespace-pre-line leading-relaxed">
+              <p className="text-xs text-neutral-300 mt-2 whitespace-pre-line leading-relaxed">
                 {selectedProblem.description}
               </p>
             </div>
 
             {/* Constraints */}
-            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <span className="text-[10px] font-semibold uppercase text-slate-400 block mb-1">
+            <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+              <span className="text-[10px] font-black uppercase text-amber-300 block mb-1">
                 Constraints
               </span>
-              <ul className="text-xs text-slate-300 font-mono space-y-0.5">
+              <ul className="text-xs text-neutral-300 font-mono space-y-0.5">
                 {selectedProblem.constraints.map((c, i) => (
                   <li key={i}>• {c}</li>
                 ))}
@@ -927,16 +1023,16 @@ export function AssessmentsView({
 
             {/* Code Editor Header: Language selector */}
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-semibold text-slate-200">Solution Implementation</span>
-              <div className="flex bg-slate-800 rounded-lg p-0.5 text-[11px]">
+              <span className="text-xs font-bold text-white">Solution Implementation</span>
+              <div className="flex bg-neutral-900 rounded-lg p-0.5 text-[11px] border border-neutral-800">
                 {(['javascript', 'python', 'java', 'cpp'] as const).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setSelectedLanguage(lang)}
-                    className={`px-2 py-0.5 rounded capitalize font-medium transition-colors ${
+                    className={`px-2.5 py-0.5 rounded capitalize font-bold transition-colors cursor-pointer ${
                       selectedLanguage === lang
-                        ? 'bg-indigo-600 text-white font-semibold'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'bg-amber-400 text-black shadow-sm'
+                        : 'text-neutral-400 hover:text-white'
                     }`}
                   >
                     {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang}
@@ -952,7 +1048,7 @@ export function AssessmentsView({
                 onChange={(e) => setUserCode(e.target.value)}
                 spellCheck={false}
                 rows={9}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-emerald-300 leading-relaxed focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-inner resize-y"
+                className="w-full bg-[#080808] border border-neutral-800 rounded-xl p-3 text-xs font-mono text-amber-200 leading-relaxed focus:outline-none focus:ring-1 focus:ring-amber-400 shadow-inner resize-y"
               />
             </div>
 
@@ -962,9 +1058,9 @@ export function AssessmentsView({
                 id="run-code-button"
                 disabled={isRunningCode}
                 onClick={handleRunTestCases}
-                className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                className="flex-1 py-2 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-neutral-700 cursor-pointer"
               >
-                <Play className="w-3.5 h-3.5 text-indigo-400 fill-indigo-400" />
+                <Play className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                 <span>{isRunningCode ? 'Executing...' : 'Run Test Cases'}</span>
               </button>
 
@@ -972,9 +1068,9 @@ export function AssessmentsView({
                 id="ai-code-eval-btn"
                 disabled={isRequestingAiReview}
                 onClick={handleRequestAiReview}
-                className="py-2 px-3 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="py-2 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>{isRequestingAiReview ? 'Analyzing...' : 'AI Hints & Review'}</span>
               </button>
 
@@ -982,7 +1078,7 @@ export function AssessmentsView({
                 id="submit-code-button"
                 disabled={isRunningCode}
                 onClick={handleSubmitCode}
-                className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors shadow-sm"
+                className="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/25 cursor-pointer"
               >
                 Submit Code
               </button>
@@ -990,19 +1086,19 @@ export function AssessmentsView({
 
             {/* Test Results Output Drawer */}
             {testResults && (
-              <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2">
+              <div className="bg-neutral-950 p-3.5 rounded-xl border border-amber-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200">
+                  <span className="text-xs font-bold text-white">
                     Test Results ({testResults.filter((r) => r.passed).length}/{testResults.length} Passed)
                   </span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                    className={`text-[10px] font-black px-2 py-0.5 rounded border ${
                       testResults.every((r) => r.passed)
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-400'
+                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                     }`}
                   >
-                    {testResults.every((r) => r.passed) ? 'All Test Cases Passed' : 'Test Cases Failed'}
+                    {testResults.every((r) => r.passed) ? 'All Passed' : 'Failed'}
                   </span>
                 </div>
 
@@ -1012,14 +1108,14 @@ export function AssessmentsView({
                     <button
                       key={r.testCaseId}
                       onClick={() => setActiveTestCaseIndex(i)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1 cursor-pointer ${
                         activeTestCaseIndex === i
-                          ? 'bg-indigo-900/60 border-indigo-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-400'
+                          ? 'bg-amber-500/25 border-amber-400 text-amber-300'
+                          : 'bg-neutral-900 border-neutral-800 text-neutral-400'
                       }`}
                     >
                       {r.passed ? (
-                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <CheckCircle2 className="w-3 h-3 text-amber-400" />
                       ) : (
                         <XCircle className="w-3 h-3 text-rose-400" />
                       )}
@@ -1030,36 +1126,31 @@ export function AssessmentsView({
 
                 {/* Active test case inspection */}
                 {testResults[activeTestCaseIndex] && (
-                  <div className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800 text-xs font-mono space-y-1 mt-2">
-                    <div className="text-slate-400">
+                  <div className="bg-black p-2.5 rounded-lg border border-neutral-800 text-xs font-mono space-y-1 mt-2">
+                    <div className="text-neutral-400">
                       Input:{' '}
-                      <span className="text-slate-200">
+                      <span className="text-white">
                         {testResults[activeTestCaseIndex].input}
                       </span>
                     </div>
-                    <div className="text-slate-400">
+                    <div className="text-neutral-400">
                       Expected Output:{' '}
-                      <span className="text-emerald-400 font-semibold">
+                      <span className="text-amber-400 font-semibold">
                         {testResults[activeTestCaseIndex].expectedOutput}
                       </span>
                     </div>
-                    <div className="text-slate-400">
+                    <div className="text-neutral-400">
                       Actual Output:{' '}
                       <span
                         className={
                           testResults[activeTestCaseIndex].passed
-                            ? 'text-emerald-400 font-semibold'
+                            ? 'text-amber-400 font-semibold'
                             : 'text-rose-400 font-semibold'
                         }
                       >
                         {testResults[activeTestCaseIndex].actualOutput}
                       </span>
                     </div>
-                    {testResults[activeTestCaseIndex].error && (
-                      <div className="text-rose-400 text-[11px]">
-                        Error: {testResults[activeTestCaseIndex].error}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -1067,35 +1158,24 @@ export function AssessmentsView({
 
             {/* AI Review & Feedback Panel */}
             {aiReview && (
-              <div className="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 p-3.5 rounded-xl border border-indigo-500/30 space-y-2">
-                <div className="flex items-center gap-1.5 text-indigo-300 text-xs font-bold">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
+              <div className="bg-neutral-950 p-3.5 rounded-xl border border-amber-500/40 space-y-2">
+                <div className="flex items-center gap-1.5 text-amber-300 text-xs font-black uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>AI Placement Code Review</span>
                 </div>
                 <div className="flex gap-2 text-xs">
-                  <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">
+                  <span className="px-2 py-0.5 rounded bg-neutral-900 text-amber-300 font-mono border border-neutral-800">
                     Time: {aiReview.timeComplexity}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">
+                  <span className="px-2 py-0.5 rounded bg-neutral-900 text-amber-300 font-mono border border-neutral-800">
                     Space: {aiReview.spaceComplexity}
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-neutral-300 leading-relaxed">
                   {aiReview.feedback}
                 </p>
-                {aiReview.improvements?.length > 0 && (
-                  <div className="text-xs text-slate-400 space-y-0.5 pt-1">
-                    <span className="font-semibold text-slate-300">Suggested Polish:</span>
-                    {aiReview.improvements.map((imp, idx) => (
-                      <div key={idx} className="flex items-start gap-1">
-                        <span className="text-indigo-400">•</span>
-                        <span>{imp}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 {aiReview.interviewTips && (
-                  <div className="text-[11px] text-amber-300 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                  <div className="text-[11px] text-amber-200 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30">
                     💡 <strong>Interviewer Tip:</strong> {aiReview.interviewTips}
                   </div>
                 )}
@@ -1105,25 +1185,25 @@ export function AssessmentsView({
         </div>
       )}
 
-      {/* Submission Success Dialog */}
+      {/* Submission Success Dialog (Black & Gold) */}
       {submissionSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full text-center space-y-3 shadow-xl">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-              <CheckCircle2 className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+          <div className="bg-black border-2 border-amber-500/50 rounded-2xl p-6 max-w-sm w-full text-center space-y-3 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/40">
+              <CheckCircle2 className="w-6 h-6 text-amber-400" />
             </div>
-            <h3 className="text-base font-bold text-slate-100">
+            <h3 className="text-base font-black text-amber-300 uppercase tracking-wide">
               Solution Accepted!
             </h3>
-            <p className="text-xs text-slate-300">
-              All test cases passed. Your Placement Readiness Score has been boosted by{' '}
-              <strong className="text-emerald-400">+35 points</strong>.
+            <p className="text-xs text-neutral-300 leading-relaxed">
+              All test cases passed. Placement Readiness Score boosted by{' '}
+              <strong className="text-amber-400 font-black">+35 points</strong>.
             </p>
             <button
               onClick={() => setSubmissionSuccessModal(false)}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors"
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
             >
-              Continue Practice
+              Continue Assessments
             </button>
           </div>
         </div>

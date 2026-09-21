@@ -33,7 +33,7 @@ export function BottomNav({
     <nav
       id="bottom-navigation-bar"
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 px-2 py-1.5 transition-all shadow-lg"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg border-t border-amber-500/30 px-2 py-1.5 transition-all shadow-2xl"
     >
       <div className="max-w-md mx-auto grid grid-cols-6 gap-1">
         {tabs.map((tab) => {
@@ -44,21 +44,21 @@ export function BottomNav({
               key={tab.id}
               id={`nav-tab-${tab.id}`}
               onClick={() => onChangeTab(tab.id)}
-              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 min-h-[44px] ${
+              className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-150 min-h-[44px] cursor-pointer ${
                 isActive
-                  ? 'text-indigo-400 font-semibold bg-indigo-950/40'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 font-normal'
+                  ? 'text-amber-300 font-bold bg-amber-500/20 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900 font-medium'
               }`}
             >
               <div className="relative">
-                <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 text-indigo-400' : 'text-slate-400'}`} />
+                <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 text-amber-400' : 'text-neutral-400'}`} />
                 {tab.id === 'badges' && unlockedBadgeCount > 0 && (
-                  <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[9px] font-bold leading-none min-w-[14px] text-center">
+                  <span className="absolute -top-1 -right-2 px-1 py-0.2 rounded-full bg-amber-400 text-black text-[9px] font-black leading-none min-w-[14px] text-center shadow-sm">
                     {unlockedBadgeCount}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] mt-0.5 tracking-tight ${isActive ? 'text-indigo-300 font-medium' : 'text-slate-400'}`}>
+              <span className={`text-[10px] mt-0.5 tracking-tight ${isActive ? 'text-amber-300 font-extrabold' : 'text-neutral-400'}`}>
                 {tab.label}
               </span>
             </button>

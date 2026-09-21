@@ -33,11 +33,24 @@ export interface StudentProfile {
   photoURL?: string;
 }
 
-export type AptitudeCategory = 'quantitative' | 'logical' | 'verbal';
+export type AssessmentCategory =
+  | 'verbal'
+  | 'soft_skills'
+  | 'coding'
+  | 'excel'
+  | 'sql'
+  | 'power_bi'
+  | 'ai'
+  | 'generative_ai'
+  | 'agentic_ai'
+  | 'quantitative'
+  | 'logical';
+
+export type AptitudeCategory = AssessmentCategory;
 
 export interface AptitudeQuestion {
   id: string;
-  category: AptitudeCategory;
+  category: AssessmentCategory;
   topic: string;
   question: string;
   options: string[];
@@ -53,7 +66,7 @@ export interface AptitudeAssessmentResult {
   correctAnswers: number;
   scorePercentage: number;
   timeSpentSeconds: number;
-  categoryScores: Record<AptitudeCategory, { correct: number; total: number }>;
+  categoryScores: Record<string, { correct: number; total: number }>;
   readinessPointsDelta: number;
 }
 

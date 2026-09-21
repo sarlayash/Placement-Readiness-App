@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Smartphone, Monitor, Award } from 'lucide-react';
+import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles } from 'lucide-react';
 import { StudentProfile } from '../types';
 
 interface NavbarProps {
@@ -19,73 +19,73 @@ export function Navbar({
   onOpenCertificate,
 }: NavbarProps) {
   return (
-    <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 py-2.5 transition-all">
+    <header className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-amber-500/30 text-white px-4 py-2.5 transition-all shadow-md shadow-black">
       <div className="flex items-center justify-between max-w-5xl mx-auto">
-        {/* Left: Brand & Mobile title */}
+        {/* Left: Brand & Accreditation */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-sm shadow-indigo-500/30">
-            <span className="text-base tracking-tighter">PQ</span>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center font-black text-black shadow-md shadow-amber-500/20">
+            <span className="text-sm tracking-tighter">SYM</span>
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-sm font-semibold tracking-tight text-slate-100">
-                PlacementIQ
+              <h1 className="text-sm font-black tracking-wide text-white uppercase">
+                Assessment Portal
               </h1>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                Intelligence
+              <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                Gold Standard
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              {profile.college} • Class of {profile.graduationYear}
+            <p className="text-[10px] text-neutral-400 hidden sm:block">
+              Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
             </p>
           </div>
         </div>
 
-        {/* Right: Streak, Readiness Score, View Mode, Profile Avatar */}
+        {/* Right: Streak, PRS Score, Certificate Button, Profile */}
         <div className="flex items-center gap-2">
-          {/* Daily Streak */}
+          {/* Daily Streak in Gold */}
           <div
             id="streak-badge"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium cursor-default"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-900 border border-amber-500/40 text-amber-300 text-xs font-bold cursor-default shadow-sm"
             title={`${profile.streakDays} Day Practice Streak`}
           >
-            <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 animate-pulse" />
+            <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-pulse" />
             <span>{profile.streakDays}d</span>
           </div>
 
           {/* Placement Readiness Score Pill */}
           <div
             id="nav-prs-pill"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold cursor-default"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-900 border border-amber-500/50 text-white text-xs font-black cursor-default shadow-sm"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>PRS {readinessScore}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            <span>PRS <strong className="text-amber-300">{readinessScore}</strong></span>
           </div>
 
-          {/* Official Certificate Button */}
+          {/* Official Certificate Button (PNG download prompt) */}
           {onOpenCertificate && (
             <button
               id="nav-certificate-btn"
               onClick={onOpenCertificate}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition-all shadow-sm"
-              title="View Placement Readiness Certificate (Certified By SarlaYash Mission Powered By Kapil)"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 cursor-pointer active:scale-95"
+              title="Official Placement Certificate (PNG format only)"
             >
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <Award className="w-3.5 h-3.5 text-black stroke-[2.5]" />
               <span className="hidden sm:inline">Certificate</span>
             </button>
           )}
 
-          {/* Toggle Device Frame (useful for previewing on desktop) */}
+          {/* Toggle Device Frame */}
           <button
             id="toggle-device-frame-btn"
             onClick={onToggleDeviceFrame}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors hidden md:flex items-center justify-center"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors hidden md:flex items-center justify-center border border-neutral-800"
             title={isDeviceFrame ? 'Switch to Full Screen View' : 'Switch to Mobile Device Frame View'}
           >
             {isDeviceFrame ? (
-              <Monitor className="w-4 h-4 text-slate-300" />
+              <Monitor className="w-4 h-4 text-amber-400" />
             ) : (
-              <Smartphone className="w-4 h-4 text-slate-300" />
+              <Smartphone className="w-4 h-4 text-amber-400" />
             )}
           </button>
 
@@ -93,7 +93,7 @@ export function Navbar({
           <button
             id="profile-avatar-btn"
             onClick={onOpenProfile}
-            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white font-semibold text-xs border border-white/20 shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all focus:outline-none overflow-hidden"
+            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-black font-black text-xs border border-amber-300 shadow-sm hover:ring-2 hover:ring-amber-400 transition-all focus:outline-none overflow-hidden cursor-pointer"
             aria-label="Open profile settings"
           >
             {profile.photoURL ? (
@@ -104,9 +104,12 @@ export function Navbar({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              profile.fullName.charAt(0) || 'L'
+              profile.fullName
+                ?.split(' ')
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join('') || 'SY'
             )}
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-900" />
           </button>
         </div>
       </div>
