@@ -12,7 +12,7 @@ export async function downloadElementAsPNG(
     const dataUrl = await toPng(element, {
       quality: 1,
       pixelRatio: 2.5, // High resolution for crisp print/retina display
-      backgroundColor: '#050814',
+      backgroundColor: undefined, // Preserve element's computed background
       filter: (node) => {
         // Exclude elements marked as print-hidden or no-export
         if (node instanceof HTMLElement && node.classList.contains('no-export')) {
@@ -35,7 +35,59 @@ export async function downloadElementAsPNG(
 }
 
 /**
- * Generates an executive Black, White, and Gold Badge PNG image (1200 x 1200 px)
+ * Tier color definitions inspired by Google Cloud and Microsoft Certified credentials
+ */
+function getTierColorPalette(rarity: Badge['rarity']) {
+  switch (rarity) {
+    case 'Legendary':
+      return {
+        label: 'MASTER CREDENTIAL',
+        primary: '#F59E0B',
+        light: '#FDE047',
+        dark: '#B45309',
+        border: '#FBBF24',
+        glow: 'rgba(245, 158, 11, 0.35)',
+        pillBg: 'rgba(245, 158, 11, 0.15)',
+        badgeGradient: ['#B45309', '#F59E0B', '#FDE047'],
+      };
+    case 'Epic':
+      return {
+        label: 'EXPERT SPECIALIZATION',
+        primary: '#8B5CF6',
+        light: '#C4B5FD',
+        dark: '#4C1D95',
+        border: '#A78BFA',
+        glow: 'rgba(139, 92, 246, 0.35)',
+        pillBg: 'rgba(139, 92, 246, 0.15)',
+        badgeGradient: ['#4C1D95', '#7C3AED', '#C4B5FD'],
+      };
+    case 'Rare':
+      return {
+        label: 'ASSOCIATE PRACTITIONER',
+        primary: '#10B981',
+        light: '#6EE7B7',
+        dark: '#064E3B',
+        border: '#34D399',
+        glow: 'rgba(16, 185, 129, 0.35)',
+        pillBg: 'rgba(16, 185, 129, 0.15)',
+        badgeGradient: ['#064E3B', '#10B981', '#6EE7B7'],
+      };
+    default:
+      return {
+        label: 'FUNDAMENTAL CERTIFIED',
+        primary: '#0284C7',
+        light: '#7DD3FC',
+        dark: '#0C4A6E',
+        border: '#38BDF8',
+        glow: 'rgba(2, 132, 199, 0.35)',
+        pillBg: 'rgba(2, 132, 199, 0.15)',
+        badgeGradient: ['#0C4A6E', '#0284C7', '#7DD3FC'],
+      };
+  }
+}
+
+/**
+ * Generates an executive Google/Microsoft-styled Badge PNG (1200 x 1200 px)
  * accredited by SarlaYash Mission and powered by Kapil.
  * Downloads the badge in PNG format ONLY.
  */
@@ -53,203 +105,230 @@ export async function downloadBadgeAsPNG(
     throw new Error('Canvas 2D context not available');
   }
 
-  // 1. Solid Pure Black Background
-  ctx.fillStyle = '#050505';
+  const tier = getTierColorPalette(badge.rarity);
+
+  // 1. Deep Executive Canvas with Radial Aura
+  ctx.fillStyle = '#060A17';
   ctx.fillRect(0, 0, size, size);
 
-  // 2. Radial Dark Gradient for Depth
-  const radialBg = ctx.createRadialGradient(size / 2, size / 2, 100, size / 2, size / 2, size / 2);
-  radialBg.addColorStop(0, '#1a1810');
-  radialBg.addColorStop(0.7, '#080808');
-  radialBg.addColorStop(1, '#000000');
+  const radialBg = ctx.createRadialGradient(size / 2, size / 2 - 80, 80, size / 2, size / 2, size * 0.7);
+  radialBg.addColorStop(0, '#0F1A3A');
+  radialBg.addColorStop(0.6, '#080E24');
+  radialBg.addColorStop(1, '#040711');
   ctx.fillStyle = radialBg;
   ctx.fillRect(0, 0, size, size);
 
-  // 3. Outer Gold Metallic Border
-  const outerBorderGrad = ctx.createLinearGradient(0, 0, size, size);
-  outerBorderGrad.addColorStop(0, '#D4AF37');
-  outerBorderGrad.addColorStop(0.25, '#FFF2B2');
-  outerBorderGrad.addColorStop(0.5, '#AA771C');
-  outerBorderGrad.addColorStop(0.75, '#FFDF73');
-  outerBorderGrad.addColorStop(1, '#D4AF37');
+  // Subtle tech dot-grid pattern
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+  for (let x = 60; x < size - 60; x += 40) {
+    for (let y = 60; y < size - 60; y += 40) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = outerBorderGrad;
+  // 2. Precision Dual Border with Corner Notches (Microsoft / Google Enterprise Certificate frame)
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
   ctx.strokeRect(40, 40, size - 80, size - 80);
 
-  // 4. Inner Dashed Gold Border
-  ctx.lineWidth = 3;
-  ctx.setLineDash([12, 12]);
-  ctx.strokeStyle = 'rgba(212, 175, 55, 0.6)';
-  ctx.strokeRect(65, 65, size - 130, size - 130);
-  ctx.setLineDash([]); // reset dash
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.strokeRect(52, 52, size - 104, size - 104);
 
-  // 5. Corner Ornaments (Gold Fluerons)
-  ctx.fillStyle = '#FFDF73';
-  ctx.font = '36px serif';
+  // 3. Four-Color Tech Spectrum Accent Bar at the Top (Google / Microsoft multi-pillar signature)
+  const barY = 60;
+  const barWidth = 480;
+  const segWidth = barWidth / 4;
+  const startX = size / 2 - barWidth / 2;
+
+  const colors = ['#2563EB', '#10B981', '#F59E0B', '#EF4444']; // Blue, Green, Amber, Coral
+  colors.forEach((col, idx) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(startX + idx * segWidth, barY, segWidth, 4);
+  });
+
+  // 4. Header Ribbon: SarlaYash Mission Accreditation
+  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.letterSpacing = '5px';
+  ctx.fillStyle = '#94A3B8';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('❖', 55, 55);
-  ctx.fillText('❖', size - 55, 55);
-  ctx.fillText('❖', 55, size - 55);
-  ctx.fillText('❖', size - 55, size - 55);
+  ctx.fillText('SARLAYASH MISSION • PLACEMENT ACCREDITATION', size / 2, 100);
 
-  // 6. Top Ribbon / Header
-  ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.letterSpacing = '6px';
-  ctx.fillStyle = '#D4AF37';
-  ctx.fillText('OFFICIAL PLACEMENT CREDENTIAL', size / 2, 130);
-
-  // Gold Pill for Rarity
-  const rarityY = 180;
-  ctx.fillStyle = '#161309';
+  // 5. Tier Level Pill (Microsoft / Google Learn Badge Tier)
+  const pillY = 145;
+  ctx.fillStyle = tier.pillBg;
   ctx.beginPath();
-  ctx.roundRect(size / 2 - 160, rarityY - 24, 320, 48, [24]);
+  ctx.roundRect(size / 2 - 180, pillY - 20, 360, 40, [20]);
   ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = tier.border;
   ctx.stroke();
 
-  ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = tier.light;
+  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '3px';
-  ctx.fillText(`${badge.rarity.toUpperCase()} BADGE • ${badge.category.toUpperCase()}`, size / 2, rarityY + 2);
+  ctx.fillText(`${tier.label} • ${badge.category.toUpperCase()}`, size / 2, pillY);
 
-  // 7. Central Gold Crest / Seal
-  const centerY = 450;
-  const outerRadius = 170;
+  // 6. Central Faceted Hexagonal / Shield Medallion (Faceted Google/Microsoft Badge)
+  const centerY = 390;
+  const radius = 160;
 
-  // Outer glow circle
-  const crestGrad = ctx.createRadialGradient(size / 2, centerY, 50, size / 2, centerY, outerRadius);
-  crestGrad.addColorStop(0, '#FFE885');
-  crestGrad.addColorStop(0.5, '#D4AF37');
-  crestGrad.addColorStop(1, '#8C6200');
-
-  ctx.fillStyle = crestGrad;
+  // Outer ambient glow
+  const glowGrad = ctx.createRadialGradient(size / 2, centerY, 40, size / 2, centerY, radius + 40);
+  glowGrad.addColorStop(0, tier.glow);
+  glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = glowGrad;
   ctx.beginPath();
-  ctx.arc(size / 2, centerY, outerRadius, 0, Math.PI * 2);
+  ctx.arc(size / 2, centerY, radius + 40, 0, Math.PI * 2);
   ctx.fill();
 
-  // Dark Inner Disc
-  ctx.fillStyle = '#080808';
-  ctx.beginPath();
-  ctx.arc(size / 2, centerY, outerRadius - 16, 0, Math.PI * 2);
+  // Draw Faceted Hexagon
+  function drawHexagon(context: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+    context.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 6;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+    context.closePath();
+  }
+
+  // Outer Hexagon with Tier Gradient
+  const hexGrad = ctx.createLinearGradient(size / 2 - radius, centerY - radius, size / 2 + radius, centerY + radius);
+  hexGrad.addColorStop(0, tier.badgeGradient[2]);
+  hexGrad.addColorStop(0.5, tier.badgeGradient[1]);
+  hexGrad.addColorStop(1, tier.badgeGradient[0]);
+
+  ctx.fillStyle = hexGrad;
+  drawHexagon(ctx, size / 2, centerY, radius);
   ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#D4AF37';
+
+  // Inner Dark Facet Hexagon
+  ctx.fillStyle = '#060B18';
+  drawHexagon(ctx, size / 2, centerY, radius - 14);
+  ctx.fill();
+
+  // Fine metallic rim
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = tier.border;
+  drawHexagon(ctx, size / 2, centerY, radius - 14);
   ctx.stroke();
 
-  // Medallion Central Graphic / Star
-  ctx.fillStyle = '#FFE885';
-  ctx.font = '84px serif';
-  ctx.fillText('★', size / 2, centerY + 5);
+  // Core Emblem Star & Shield Graphic
+  ctx.fillStyle = tier.light;
+  ctx.font = '78px serif';
+  ctx.fillText('★', size / 2, centerY - 6);
 
-  // Laurel wreath arc text
-  ctx.font = 'bold 16px sans-serif';
-  ctx.fillStyle = '#D4AF37';
+  // Laurel wreath / verified insignia
+  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '4px';
-  ctx.fillText('• VERIFIED ASSESSMENT COMPETENCY •', size / 2, centerY + 115);
+  ctx.fillStyle = tier.border;
+  ctx.fillText('• VERIFIED COMPETENCY •', size / 2, centerY + 95);
 
-  // 8. Badge Title (High-contrast White with Gold Glow)
+  // 7. Badge Title (Crisp White with modern typography)
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.font = 'bold 44px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.letterSpacing = '1px';
-  ctx.fillText(badge.title, size / 2, 690);
+  ctx.fillText(badge.title, size / 2, 605);
 
-  // Gold divider
-  const divGrad = ctx.createLinearGradient(size / 2 - 200, 0, size / 2 + 200, 0);
-  divGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
-  divGrad.addColorStop(0.5, '#D4AF37');
-  divGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+  // Thin Accent Divider
+  const divGrad = ctx.createLinearGradient(size / 2 - 180, 0, size / 2 + 180, 0);
+  divGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+  divGrad.addColorStop(0.5, tier.primary);
+  divGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
   ctx.strokeStyle = divGrad;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(size / 2 - 250, 720);
-  ctx.lineTo(size / 2 + 250, 720);
+  ctx.moveTo(size / 2 - 200, 635);
+  ctx.lineTo(size / 2 + 200, 635);
   ctx.stroke();
 
-  // 9. Badge Description (Light Crisp White)
-  ctx.fillStyle = '#D1D5DB';
-  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, sans-serif';
+  // 8. Badge Description (High Readability Slate)
+  ctx.fillStyle = '#CBD5E1';
+  ctx.font = '400 22px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '0px';
+  wrapText(ctx, badge.description, size / 2, 675, 820, 32);
 
-  // Wrap text max 800px
-  wrapText(ctx, badge.description, size / 2, 765, 800, 36);
+  // 9. Recipient Statement
+  ctx.fillStyle = '#94A3B8';
+  ctx.font = '500 18px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.letterSpacing = '1px';
+  ctx.fillText('Awarded for benchmark mastery to', size / 2, 785);
 
-  // 10. Awarded To Student Section
-  ctx.fillStyle = '#9CA3AF';
-  ctx.font = 'italic 20px Georgia, serif';
-  ctx.fillText('Awarded for benchmark mastery to', size / 2, 860);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.fillText(studentName, size / 2, 830);
 
-  ctx.fillStyle = '#FFE885';
-  ctx.font = 'bold 36px Georgia, serif';
-  ctx.fillText(studentName, size / 2, 905);
-
-  // 11. Mandatory Accreditation & Dual Signature
-  // Box for accreditation
-  ctx.fillStyle = '#0e0e0e';
+  // 10. Official Accreditation Box with Dual Endorsement
+  const boxY = 885;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
   ctx.beginPath();
-  ctx.roundRect(100, 960, size - 200, 150, [16]);
+  ctx.roundRect(110, boxY, size - 220, 155, [16]);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Left side: SarlaYash Mission
+  // Left Signatory: Certified By SarlaYash Mission
   const leftX = size / 2 - 240;
-  ctx.fillStyle = '#FFE885';
-  ctx.font = 'italic bold 28px Georgia, serif';
-  ctx.fillText('SarlaYash Mission', leftX, 1010);
+  ctx.fillStyle = '#38BDF8';
+  ctx.font = 'italic bold 26px Georgia, serif';
+  ctx.fillText('SarlaYash Mission', leftX, boxY + 46);
 
-  ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(leftX - 120, 1025);
-  ctx.lineTo(leftX + 120, 1025);
+  ctx.moveTo(leftX - 110, boxY + 62);
+  ctx.lineTo(leftX + 110, boxY + 62);
   ctx.stroke();
 
-  ctx.fillStyle = '#D4AF37';
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = '#E2E8F0';
+  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '1px';
-  ctx.fillText('CERTIFIED BY SARLAYASH MISSION', leftX, 1050);
+  ctx.fillText('CERTIFIED BY SARLAYASH MISSION', leftX, boxY + 86);
 
-  ctx.fillStyle = '#9CA3AF';
+  ctx.fillStyle = '#94A3B8';
   ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '0px';
-  ctx.fillText('Director of Placement Excellence', leftX, 1072);
+  ctx.fillText('Director of Academic & Placement Excellence', leftX, boxY + 110);
 
-  // Center vertical divider
-  ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+  // Center Divider
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(size / 2, 975);
-  ctx.lineTo(size / 2, 1095);
+  ctx.moveTo(size / 2, boxY + 20);
+  ctx.lineTo(size / 2, boxY + 135);
   ctx.stroke();
 
-  // Right side: Powered By Kapil
+  // Right Signatory: Powered By Kapil
   const rightX = size / 2 + 240;
-  ctx.fillStyle = '#FFE885';
-  ctx.font = 'italic bold 28px Georgia, serif';
-  ctx.fillText('Kapil', rightX, 1010);
+  ctx.fillStyle = '#F59E0B';
+  ctx.font = 'italic bold 26px Georgia, serif';
+  ctx.fillText('Kapil', rightX, boxY + 46);
 
-  ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX - 120, 1025);
-  ctx.lineTo(rightX + 120, 1025);
+  ctx.moveTo(rightX - 110, boxY + 62);
+  ctx.lineTo(rightX + 110, boxY + 62);
   ctx.stroke();
 
-  ctx.fillStyle = '#D4AF37';
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = '#E2E8F0';
+  ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '1px';
-  ctx.fillText('POWERED BY KAPIL', rightX, 1050);
+  ctx.fillText('POWERED BY KAPIL', rightX, boxY + 86);
 
-  ctx.fillStyle = '#9CA3AF';
+  ctx.fillStyle = '#94A3B8';
   ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.letterSpacing = '0px';
-  ctx.fillText('Chief Architect & Placement Mentor', rightX, 1072);
+  ctx.fillText('Chief Technology Architect & Placement Mentor', rightX, boxY + 110);
 
-  // 12. Bottom Serial and Date
+  // 11. Cryptographic Verification & Metadata Footer
   const issueDate = new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -259,11 +338,11 @@ export async function downloadBadgeAsPNG(
     studentName.split('').reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0)
   ).toString(16).toUpperCase().padStart(4, '0')}`;
 
-  ctx.fillStyle = '#6B7280';
-  ctx.font = '14px monospace';
-  ctx.fillText(`VERIFICATION ID: ${certId}  •  ISSUED: ${issueDate.toUpperCase()}  •  FORMAT: PNG ONLY`, size / 2, 1150);
+  ctx.fillStyle = '#64748B';
+  ctx.font = '13px monospace';
+  ctx.fillText(`VERIFICATION ID: ${certId}  •  ISSUED: ${issueDate.toUpperCase()}  •  FORMAT: PNG ONLY`, size / 2, 1145);
 
-  // 13. Download as PNG ONLY
+  // 12. Save Canvas as PNG ONLY
   const pngDataUrl = canvas.toDataURL('image/png');
   const downloadLink = document.createElement('a');
   const safeName = badge.title.replace(/[^a-zA-Z0-9]/g, '_');
@@ -300,3 +379,4 @@ function wrapText(
   }
   ctx.fillText(line.trim(), x, currentY);
 }
+
