@@ -190,3 +190,35 @@ export interface ReadinessScoreBreakdown {
   strengths: string[];
   weaknesses: string[];
 }
+
+export interface LearnerActivityEvent {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  type: 'assessment' | 'coding' | 'spinning_wheel' | 'badge' | 'login';
+  module: string;
+  scorePercentage?: number;
+  pointsDelta?: number;
+  bonusEarned?: boolean;
+  details: string;
+  timestamp: string;
+}
+
+export interface LearnerPerformanceSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  college: string;
+  targetRole: string;
+  targetCompanyTier: string;
+  streakDays: number;
+  overallScore: number;
+  codingScore: number;
+  aptitudeScore: number;
+  coreSkillsScore: number;
+  testsCompleted: number;
+  lastActive: string;
+  bonusesWon: number;
+  badgesUnlocked: number;
+}

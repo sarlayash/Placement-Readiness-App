@@ -2,6 +2,10 @@ import {
   db,
   doc,
   collection,
+  query,
+  getDocs,
+  orderBy,
+  limit,
   setDoc,
   updateDoc,
   onSnapshot,
@@ -16,6 +20,7 @@ import {
   CodingSubmission,
   AptitudeAssessmentResult,
   PersonalizedRoadmap,
+  LearnerActivityEvent,
 } from '../types';
 import {
   INITIAL_SKILLS,
@@ -347,3 +352,123 @@ export async function saveRoadmapToFirestore(
     handleFirestoreError(error, OperationType.WRITE, `users/${userId}/roadmap/current`);
   }
 }
+
+/**
+ * Records a real-time learner event (assessment finished, code submitted, spinning wheel won/forfeited, etc.)
+ */
+export async function recordLearnerActivity(
+  event: Omit<LearnerActivityEvent, 'id'>
+) {
+  const eventId = `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const actRef = doc(db, 'learnerActivity', eventId);
+  try {
+    await setDoc(actRef, {
+      ...event,
+      id: eventId,
+    });
+  } catch (error) {
+    // Non-blocking: log warning without crashing user session
+    console.warn('Failed to record learner activity event to Firestore:', error);
+  }
+}
+
+/**
+ * Subscribes in real-time to the global learner activity stream for admin dashboard.
+ */
+export function subscribeToAllLearnerActivities(
+  onData: (activities: LearnerActivityEvent[]) => void
+) {
+  const colRef = collection(db, 'learnerActivity');
+  const q = query(colRef, orderBy('timestamp', 'desc'), limit(50));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const list: LearnerActivityEvent[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push(docSnap.data() as LearnerActivityEvent);
+      });
+      onData(list);
+    },
+    (error) => {
+      console.warn('Error subscribing to learner activity feed:', error);
+    }
+  );
+}
+
+/**
+ * Subscribes in real-time to all learners in the database for the admin dashboard.
+ */
+export function subscribeToAllLearners(
+  onData: (learners: StudentProfile[]) => void
+) {
+  const usersCol = collection(db, 'users');
+
+  return onSnapshot(
+    usersCol,
+    (snapshot) => {
+      const list: StudentProfile[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          fullName: data.fullName || 'Learner',
+          email: data.email || '',
+          college: data.college || '',
+          degree: data.degree || '',
+          branch: data.branch || '',
+          graduationYear: data.graduationYear || new Date().getFullYear() + 1,
+          cgpa: data.cgpa || 0,
+          targetRole: data.targetRole || 'Software Development Engineer',
+          targetCompanyTier: data.targetCompanyTier || 'Tier-1 Big Tech',
+          githubUrl: data.githubUrl || '',
+          linkedinUrl: data.linkedinUrl || '',
+          resumeHeadline: data.resumeHeadline || '',
+          skills: data.skills || [],
+          streakDays: data.streakDays || 1,
+          avatarSeed: data.avatarSeed || data.fullName || 'Learner',
+          photoURL: data.photoURL,
+        });
+      });
+      onData(list);
+    },
+    (error) => {
+      console.warn('Error subscribing to all learners:', error);
+    }
+  );
+}
+
+/**
+ * Fetches deep performance analytics for a single learner (all results, submissions, badges).
+ */
+export async function getLearnerPerformanceDetails(userId: string): Promise<{
+  aptitudeResults: AptitudeAssessmentResult[];
+  codingSubmissions: CodingSubmission[];
+  badges: Badge[];
+  skills: SkillItem[];
+}> {
+  try {
+    const aptSnap = await getDocs(collection(db, 'users', userId, 'aptitudeResults'));
+    const codingSnap = await getDocs(collection(db, 'users', userId, 'codingSubmissions'));
+    const badgesSnap = await getDocs(collection(db, 'users', userId, 'badges'));
+    const skillsSnap = await getDocs(collection(db, 'users', userId, 'skills'));
+
+    const aptitudeResults: AptitudeAssessmentResult[] = [];
+    aptSnap.forEach((d) => aptitudeResults.push(d.data() as AptitudeAssessmentResult));
+
+    const codingSubmissions: CodingSubmission[] = [];
+    codingSnap.forEach((d) => codingSubmissions.push(d.data() as CodingSubmission));
+
+    const badges: Badge[] = [];
+    badgesSnap.forEach((d) => badges.push(d.data() as Badge));
+
+    const skills: SkillItem[] = [];
+    skillsSnap.forEach((d) => skills.push(d.data() as SkillItem));
+
+    return { aptitudeResults, codingSubmissions, badges, skills };
+  } catch (error) {
+    console.warn('Error getting learner performance details:', error);
+    return { aptitudeResults: [], codingSubmissions: [], badges: [], skills: [] };
+  }
+}
+

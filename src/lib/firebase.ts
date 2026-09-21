@@ -19,6 +19,8 @@ import {
   deleteDoc,
   onSnapshot,
   serverTimestamp,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -126,5 +128,7 @@ export {
   deleteDoc,
   onSnapshot,
   serverTimestamp,
+  orderBy,
+  limit,
 };
 export type { User };

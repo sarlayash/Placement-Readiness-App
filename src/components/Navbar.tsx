@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles } from 'lucide-react';
+import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles, ShieldAlert, Shield } from 'lucide-react';
 import { StudentProfile } from '../types';
 
 interface NavbarProps {
@@ -8,6 +8,8 @@ interface NavbarProps {
   onToggleDeviceFrame: () => void;
   onOpenProfile: () => void;
   onOpenCertificate?: () => void;
+  onOpenAdmin?: () => void;
+  isAdminAuthenticated?: boolean;
 }
 
 export function Navbar({
@@ -17,6 +19,8 @@ export function Navbar({
   onToggleDeviceFrame,
   onOpenProfile,
   onOpenCertificate,
+  onOpenAdmin,
+  isAdminAuthenticated,
 }: NavbarProps) {
   return (
     <header className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-amber-500/30 text-white px-4 py-2.5 transition-all shadow-md shadow-black">
@@ -72,6 +76,23 @@ export function Navbar({
             >
               <Award className="w-3.5 h-3.5 text-black stroke-[2.5]" />
               <span className="hidden sm:inline">Certificate</span>
+            </button>
+          )}
+
+          {/* Admin Command Center Access */}
+          {onOpenAdmin && (
+            <button
+              id="nav-admin-portal-btn"
+              onClick={onOpenAdmin}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider transition-all border cursor-pointer active:scale-95 ${
+                isAdminAuthenticated
+                  ? 'bg-amber-400 text-black border-amber-300 shadow-md shadow-amber-500/20'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-amber-400 border-amber-500/40'
+              }`}
+              title="Admin Dashboard (Executive Performance Tracking)"
+            >
+              <Shield className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="hidden sm:inline">Admin</span>
             </button>
           )}
 

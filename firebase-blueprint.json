@@ -113,9 +113,32 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "overview"]
+    },
+    "LearnerActivity": {
+      "title": "LearnerActivity",
+      "description": "Real-time activity events for admin dashboard tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "type": { "type": "string" },
+        "module": { "type": "string" },
+        "scorePercentage": { "type": "number" },
+        "pointsDelta": { "type": "number" },
+        "bonusEarned": { "type": "boolean" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "type", "timestamp"]
     }
   },
   "firestore": {
+    "/learnerActivity/{activityId}": {
+      "schema": "LearnerActivity",
+      "description": "Live streaming learner assessment events for real-time tracking"
+    },
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "Learner profile document keyed by auth UID"

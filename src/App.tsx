@@ -15,6 +15,7 @@ import { ProfileView } from './components/ProfileView';
 import { CompanyIntelligenceModal } from './components/CompanyIntelligenceModal';
 import { GoogleAuthScreen } from './components/GoogleAuthScreen';
 import { CertificateModal } from './components/CertificateModal';
+import { AdminDashboardView } from './components/AdminDashboardView';
 
 import {
   StudentProfile,
@@ -50,6 +51,7 @@ import {
   saveCodingSubmissionToFirestore,
   subscribeToRoadmap,
   saveRoadmapToFirestore,
+  recordLearnerActivity,
 } from './lib/firestoreService';
 import { Loader2 } from 'lucide-react';
 
@@ -57,6 +59,13 @@ export default function App() {
   // Auth state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Admin Dashboard State
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && sessionStorage.getItem('isAdminAuth') === 'true';
+  });
+  const [selectedInspectionProfile, setSelectedInspectionProfile] = useState<StudentProfile | null>(null);
 
   // Firestore Synced State
   const [profile, setProfile] = useState<StudentProfile>(() =>
@@ -207,6 +216,19 @@ export default function App() {
     if (!currentUser) return;
     await saveAptitudeResultToFirestore(currentUser.uid, result);
 
+    // Record live event for Admin Dashboard tracking
+    recordLearnerActivity({
+      userId: currentUser.uid,
+      userName: profile.fullName || 'Learner',
+      userEmail: profile.email || '',
+      type: 'assessment',
+      module: 'Assessments',
+      scorePercentage: result.scorePercentage,
+      pointsDelta: result.readinessPointsDelta,
+      details: `Completed assessment: ${result.scorePercentage}% score (${result.correctAnswers}/${result.totalQuestions} correct)`,
+      timestamp: new Date().toISOString(),
+    });
+
     // Update verified aptitude skills in Firestore
     for (const skill of skills) {
       if (skill.category === 'Aptitude & Logic') {
@@ -224,6 +246,17 @@ export default function App() {
   const handleSubmitCoding = async (submission: CodingSubmission) => {
     if (!currentUser) return;
     await saveCodingSubmissionToFirestore(currentUser.uid, submission);
+
+    // Record live event for Admin Dashboard tracking
+    recordLearnerActivity({
+      userId: currentUser.uid,
+      userName: profile.fullName || 'Learner',
+      userEmail: profile.email || '',
+      type: 'coding',
+      module: 'Coding & DSA',
+      details: `Submitted code challenge: ${submission.status} (${submission.passedCount}/${submission.totalCount} tests passed)`,
+      timestamp: new Date().toISOString(),
+    });
 
     // If accepted, update DSA skill level in Firestore
     if (submission.status === 'Accepted') {
@@ -346,6 +379,25 @@ export default function App() {
 
   // Content switcher
   const renderCurrentView = () => {
+    if (isAdminMode) {
+      return (
+        <AdminDashboardView
+          isAdminAuthenticated={isAdminAuthenticated}
+          onLoginSuccess={() => {
+            setIsAdminAuthenticated(true);
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('isAdminAuth', 'true');
+            }
+          }}
+          onExitAdmin={() => setIsAdminMode(false)}
+          onOpenCertificateModalForUser={(inspectProfile) => {
+            setSelectedInspectionProfile(inspectProfile);
+            setShowCertificateModal(true);
+          }}
+        />
+      );
+    }
+
     switch (currentTab) {
       case 'dashboard':
         return (
@@ -363,7 +415,10 @@ export default function App() {
               setCurrentTab('assessments');
             }}
             onOpenCompanyModal={() => setShowCompanyModal(true)}
-            onOpenCertificate={() => setShowCertificateModal(true)}
+            onOpenCertificate={() => {
+              setSelectedInspectionProfile(null);
+              setShowCertificateModal(true);
+            }}
           />
         );
       case 'assessments':
@@ -406,6 +461,7 @@ export default function App() {
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
             onSignOut={handleSignOut}
+            onOpenAdmin={() => setIsAdminMode(true)}
           />
         );
       default:
@@ -422,6 +478,8 @@ export default function App() {
         className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 ${
           isDeviceFrame
             ? 'max-w-[430px] my-4 md:my-6 rounded-[40px] border-[8px] border-neutral-800 shadow-2xl shadow-amber-950/20 overflow-hidden relative min-h-[850px] bg-black'
+            : isAdminMode
+            ? 'max-w-5xl'
             : 'max-w-2xl'
         }`}
       >
@@ -438,8 +496,16 @@ export default function App() {
           readinessScore={readiness.overallScore}
           isDeviceFrame={isDeviceFrame}
           onToggleDeviceFrame={() => setIsDeviceFrame(!isDeviceFrame)}
-          onOpenProfile={() => setCurrentTab('profile')}
-          onOpenCertificate={() => setShowCertificateModal(true)}
+          onOpenProfile={() => {
+            setIsAdminMode(false);
+            setCurrentTab('profile');
+          }}
+          onOpenCertificate={() => {
+            setSelectedInspectionProfile(null);
+            setShowCertificateModal(true);
+          }}
+          onOpenAdmin={() => setIsAdminMode(!isAdminMode)}
+          isAdminAuthenticated={isAdminAuthenticated}
         />
 
         {/* Main Content Area */}
@@ -449,8 +515,11 @@ export default function App() {
 
         {/* Mobile Ergonomic Bottom Navigation */}
         <BottomNav
-          currentTab={currentTab}
-          onChangeTab={(tab) => setCurrentTab(tab)}
+          currentTab={isAdminMode ? ('none' as TabType) : currentTab}
+          onChangeTab={(tab) => {
+            setIsAdminMode(false);
+            setCurrentTab(tab);
+          }}
           unlockedBadgeCount={unlockedBadgeCount}
         />
       </div>
@@ -470,9 +539,12 @@ export default function App() {
       {/* Official Placement Readiness Certificate Modal */}
       {showCertificateModal && (
         <CertificateModal
-          profile={profile}
+          profile={selectedInspectionProfile || profile}
           readiness={readiness}
-          onClose={() => setShowCertificateModal(false)}
+          onClose={() => {
+            setShowCertificateModal(false);
+            setSelectedInspectionProfile(null);
+          }}
         />
       )}
     </div>
