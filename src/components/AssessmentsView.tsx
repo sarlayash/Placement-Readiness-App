@@ -22,6 +22,9 @@ import {
   Bot,
   MessageSquare,
   Sparkle,
+  Calendar,
+  Flame,
+  Layers,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -33,6 +36,8 @@ import {
 } from '../types';
 import { runJavaScriptProblem } from '../utils/codeRunner';
 import { SpinningWheelModal, WheelReward } from './SpinningWheelModal';
+import { DayWiseMockTestSelector } from './DayWiseMockTestSelector';
+import { DayDomainMockTest, ALL_DAY_MOCK_TESTS } from '../data/dayWiseMockTests';
 
 interface AssessmentsViewProps {
   questions: AptitudeQuestion[];
@@ -54,7 +59,23 @@ export function AssessmentsView({
   defaultSubTab = 'aptitude',
 }: AssessmentsViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding'>(defaultSubTab);
+  const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules'>('day_wise');
   const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
+
+  // Day-wise custom test state
+  const [customTestPool, setCustomTestPool] = useState<AptitudeQuestion[] | null>(null);
+  const [customTestTitle, setCustomTestTitle] = useState<string | null>(null);
+  const [activeDayDomainKey, setActiveDayDomainKey] = useState<string | null>(null);
+  const [dayTestsHistory, setDayTestsHistory] = useState<
+    Record<string, { score: number; total: number; percentage: number }>
+  >(() => {
+    try {
+      const saved = localStorage.getItem('placement_day_tests_history');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Aptitude state
   const [isTestActive, setIsTestActive] = useState(false);
@@ -139,11 +160,72 @@ export function AssessmentsView({
     setSelectedAnswers({});
     setMarkedForReview({});
     setCurrentQuestionIndex(0);
+    setCustomTestPool(null);
+    setCustomTestTitle(null);
+    setActiveDayDomainKey(null);
     const pool = activeQuestions.length > 0 ? activeQuestions : questions;
     setSecondsRemaining(pool.length * 75);
     setTestResult(null);
     setShowReviewExplanations(false);
     // Reset spinning wheel state
+    setWheelReward(null);
+    setWheelQuestionId(null);
+    setEliminatedOptions({});
+    setWheelBonusSummary(null);
+    setShowWheelModal(false);
+    setIsTestActive(true);
+  };
+
+  const handleStartDayDomainTest = (dayNumber: number, domain: DayDomainMockTest) => {
+    setCustomTestPool(domain.questions);
+    setCustomTestTitle(`Day ${dayNumber} • ${domain.domainName} Placement Mock (10 MCQs)`);
+    setActiveDayDomainKey(`day_${dayNumber}_${domain.category}`);
+    setSelectedAnswers({});
+    setMarkedForReview({});
+    setCurrentQuestionIndex(0);
+    setSecondsRemaining(domain.questions.length * 72); // 12 mins for 10 MCQs
+    setTestResult(null);
+    setShowReviewExplanations(false);
+    setWheelReward(null);
+    setWheelQuestionId(null);
+    setEliminatedOptions({});
+    setWheelBonusSummary(null);
+    setShowWheelModal(false);
+    setIsTestActive(true);
+  };
+
+  const handleStartFullDayTest = (dayNumber: number) => {
+    const pack = ALL_DAY_MOCK_TESTS.find((p) => p.dayNumber === dayNumber) || ALL_DAY_MOCK_TESTS[0];
+    const fullQuestions = pack.domains.flatMap((d) => d.questions);
+    setCustomTestPool(fullQuestions);
+    setCustomTestTitle(`Day ${dayNumber} • Full Placement Marathon (${fullQuestions.length} MCQs)`);
+    setActiveDayDomainKey(`day_${dayNumber}_full`);
+    setSelectedAnswers({});
+    setMarkedForReview({});
+    setCurrentQuestionIndex(0);
+    setSecondsRemaining(fullQuestions.length * 60);
+    setTestResult(null);
+    setShowReviewExplanations(false);
+    setWheelReward(null);
+    setWheelQuestionId(null);
+    setEliminatedOptions({});
+    setWheelBonusSummary(null);
+    setShowWheelModal(false);
+    setIsTestActive(true);
+  };
+
+  const handleStartDiagnosticTest = (dayNumber: number) => {
+    const pack = ALL_DAY_MOCK_TESTS.find((p) => p.dayNumber === dayNumber) || ALL_DAY_MOCK_TESTS[0];
+    const sample11 = pack.domains.map((d) => d.questions[0]).filter(Boolean);
+    setCustomTestPool(sample11);
+    setCustomTestTitle(`Day ${dayNumber} • Cross-Domain Placement Diagnostic (11 MCQs)`);
+    setActiveDayDomainKey(`day_${dayNumber}_diagnostic`);
+    setSelectedAnswers({});
+    setMarkedForReview({});
+    setCurrentQuestionIndex(0);
+    setSecondsRemaining(sample11.length * 75);
+    setTestResult(null);
+    setShowReviewExplanations(false);
     setWheelReward(null);
     setWheelQuestionId(null);
     setEliminatedOptions({});
@@ -247,6 +329,23 @@ export function AssessmentsView({
       timeSpentSeconds: timeSpent > 0 ? timeSpent : 30,
       readinessPointsDelta: pointsDelta,
     };
+
+    if (activeDayDomainKey) {
+      const updatedHistory = {
+        ...dayTestsHistory,
+        [activeDayDomainKey]: {
+          score: correctCount,
+          total: pool.length,
+          percentage: scorePct,
+        },
+      };
+      setDayTestsHistory(updatedHistory);
+      try {
+        localStorage.setItem('placement_day_tests_history', JSON.stringify(updatedHistory));
+      } catch (e) {
+        console.error('Failed to save day test history:', e);
+      }
+    }
 
     setTestResult(result);
     onCompleteAptitude(result);
@@ -363,7 +462,7 @@ export function AssessmentsView({
     { id: 'logical', label: 'Logical Reasoning', icon: BrainCircuit, count: questions.filter(q => q.category === 'logical').length },
   ];
 
-  const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+  const pool = customTestPool && customTestPool.length > 0 ? customTestPool : (activeQuestions.length > 0 ? activeQuestions : questions);
   const currentQ = pool[currentQuestionIndex] || pool[0];
 
   return (
@@ -401,139 +500,203 @@ export function AssessmentsView({
       {/* ============================================================== */}
       {activeSubTab === 'aptitude' && (
         <div className="space-y-4">
-          {/* Module Selector Chips (Verbal, Soft Skills, Coding, Excel, SQL, Power BI, AI, GenAI, Agentic AI) */}
+          {/* Sub-Mode Switcher: Day-Wise Placement Mocks vs Standard Practice Bank */}
           {!isTestActive && !testResult && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
-                  Select Assessment Module
-                </span>
-                <span className="text-[10px] text-neutral-400 font-medium">
-                  {modulesList.length} Tracks Available
-                </span>
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                {modulesList.map((m) => {
-                  const Icon = m.icon;
-                  const isSelected = selectedModule === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => {
-                        setSelectedModule(m.id);
-                        setCurrentQuestionIndex(0);
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold border transition-all shrink-0 cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
-                          : 'bg-black border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
-                      }`}
-                    >
-                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-neutral-500'}`} />
-                      <span>{m.label}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${isSelected ? 'bg-amber-400 text-black' : 'bg-neutral-900 text-neutral-400'}`}>
-                        {m.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex bg-black p-1 rounded-2xl border border-neutral-800 shadow-md">
+              <button
+                id="assessment-mode-daywise-btn"
+                onClick={() => setAssessmentMode('day_wise')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  assessmentMode === 'day_wise'
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Day-Wise Placement Mocks</span>
+              </button>
+              <button
+                id="assessment-mode-modules-btn"
+                onClick={() => setAssessmentMode('modules')}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  assessmentMode === 'modules'
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Practice Question Bank</span>
+              </button>
             </div>
           )}
 
-          {/* Assessment Overview / Launch Card */}
-          {!isTestActive && !testResult && (
-            <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-5 shadow-xl space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* DAY-WISE MOCK TESTS (Day 1: 11 Domains • 10 MCQs each) */}
+          {!isTestActive && !testResult && assessmentMode === 'day_wise' && (
+            <DayWiseMockTestSelector
+              onStartDomainTest={handleStartDayDomainTest}
+              onStartFullDayTest={handleStartFullDayTest}
+              onStartDiagnosticTest={handleStartDiagnosticTest}
+              completedTestsHistory={dayTestsHistory}
+            />
+          )}
 
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
-                    <BrainCircuit className="w-5 h-5 text-black stroke-[2.5]" />
+          {/* STANDARD MODULE PRACTICE VIEW */}
+          {!isTestActive && !testResult && assessmentMode === 'modules' && (
+            <>
+              {/* Module Selector Chips */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+                    Select Assessment Module
                   </span>
-                  <div>
-                    <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
-                      {selectedModule === 'all'
-                        ? 'Comprehensive Placement Assessment'
-                        : `${modulesList.find((m) => m.id === selectedModule)?.label} Assessment`}
-                    </h3>
-                    <p className="text-[11px] text-neutral-300 mt-0.5">
-                      Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
-                    </p>
+                  <span className="text-[10px] text-neutral-400 font-medium">
+                    {modulesList.length} Tracks Available
+                  </span>
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {modulesList.map((m) => {
+                    const Icon = m.icon;
+                    const isSelected = selectedModule === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedModule(m.id);
+                          setCurrentQuestionIndex(0);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold border transition-all shrink-0 cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
+                            : 'bg-black border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-neutral-500'}`} />
+                        <span>{m.label}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${isSelected ? 'bg-amber-400 text-black' : 'bg-neutral-900 text-neutral-400'}`}>
+                          {m.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Assessment Overview / Launch Card */}
+              <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-5 shadow-xl space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                      <BrainCircuit className="w-5 h-5 text-black stroke-[2.5]" />
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
+                        {selectedModule === 'all'
+                          ? 'Comprehensive Placement Assessment'
+                          : `${modulesList.find((m) => m.id === selectedModule)?.label} Assessment`}
+                      </h3>
+                      <p className="text-[11px] text-neutral-300 mt-0.5">
+                        Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded border border-amber-500/40">
+                    {pool.length} Qs
+                  </span>
+                </div>
+
+                {/* Assessment Stats Strip */}
+                <div className="grid grid-cols-3 gap-2 py-1 relative z-10">
+                  <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                    <span className="text-[9px] text-neutral-400 uppercase font-bold block">Questions</span>
+                    <span className="text-sm font-black text-white">{pool.length} Items</span>
+                  </div>
+                  <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                    <span className="text-[9px] text-neutral-400 uppercase font-bold block">Duration</span>
+                    <span className="text-sm font-black text-amber-300">{Math.round((pool.length * 75) / 60)} Mins</span>
+                  </div>
+                  <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
+                    <span className="text-[9px] text-neutral-400 uppercase font-bold block">Wheel Bonus</span>
+                    <span className="text-sm font-black text-amber-400">2x Double Bonus</span>
                   </div>
                 </div>
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded border border-amber-500/40">
-                  {pool.length} Qs
-                </span>
-              </div>
 
-              {/* Assessment Stats Strip */}
-              <div className="grid grid-cols-3 gap-2 py-1 relative z-10">
-                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
-                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Questions</span>
-                  <span className="text-sm font-black text-white">{pool.length} Items</span>
+                {/* Assessment Rules */}
+                <div className="space-y-1.5 text-xs text-neutral-300 bg-neutral-950 p-3.5 rounded-xl border border-amber-500/30 relative z-10">
+                  <div className="font-extrabold text-amber-300 mb-1 uppercase tracking-wider text-[10px]">
+                    Official Assessment Guidelines:
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Timed evaluation with official SarlaYash Mission certification standard.</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Spinning Wheel available for 1 MCQ to unlock <strong>Double Bonus (2x)</strong>.</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span><strong>Important rule:</strong> Wrong answer strictly removes bonus points (0 pts awarded).</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Earn credentials downloadable in <strong>PNG format only</strong>.</span>
+                  </div>
                 </div>
-                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
-                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Duration</span>
-                  <span className="text-sm font-black text-amber-300">{Math.round((pool.length * 75) / 60)} Mins</span>
-                </div>
-                <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
-                  <span className="text-[9px] text-neutral-400 uppercase font-bold block">Wheel Bonus</span>
-                  <span className="text-sm font-black text-amber-400">2x Double Bonus</span>
-                </div>
-              </div>
 
-              {/* Assessment Rules */}
-              <div className="space-y-1.5 text-xs text-neutral-300 bg-neutral-950 p-3.5 rounded-xl border border-amber-500/30 relative z-10">
-                <div className="font-extrabold text-amber-300 mb-1 uppercase tracking-wider text-[10px]">
-                  Official Assessment Guidelines:
-                </div>
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>Timed evaluation with official SarlaYash Mission certification standard.</span>
-                </div>
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>Spinning Wheel available for 1 MCQ to unlock <strong>Double Bonus (2x)</strong>.</span>
-                </div>
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span><strong>Important rule:</strong> Wrong answer strictly removes bonus points (0 pts awarded).</span>
-                </div>
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>Earn credentials downloadable in <strong>PNG format only</strong>.</span>
-                </div>
+                {/* Launch Button */}
+                <button
+                  id="start-aptitude-test-btn"
+                  onClick={handleStartAptitudeTest}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer relative z-10 active:scale-95"
+                >
+                  <Play className="w-4 h-4 fill-black stroke-black" />
+                  <span>Launch Timed Assessment</span>
+                </button>
               </div>
-
-              {/* Launch Button */}
-              <button
-                id="start-aptitude-test-btn"
-                onClick={handleStartAptitudeTest}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer relative z-10 active:scale-95"
-              >
-                <Play className="w-4 h-4 fill-black stroke-black" />
-                <span>Launch Timed Assessment</span>
-              </button>
-            </div>
+            </>
           )}
 
           {/* ACTIVE TEST RUNNER */}
           {isTestActive && (
             <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl space-y-4">
+              {/* Custom Test Title Banner with Exit button */}
+              {customTestTitle && (
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-900">
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wide truncate">
+                    {customTestTitle}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (confirm('Exit this placement mock test? Unsaved answers will not be scored.')) {
+                        if (timerRef.current) clearInterval(timerRef.current);
+                        setIsTestActive(false);
+                        setCustomTestPool(null);
+                        setCustomTestTitle(null);
+                        setActiveDayDomainKey(null);
+                      }
+                    }}
+                    className="text-[10px] font-bold text-neutral-400 hover:text-rose-400 transition-colors shrink-0 px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800"
+                  >
+                    Exit Test
+                  </button>
+                </div>
+              )}
+
               {/* Header: Question counter, category pill, timer */}
               <div className="flex items-center justify-between pb-3 border-b border-neutral-900">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
                     Q {currentQuestionIndex + 1} of {pool.length}
                   </span>
-                  <span className="text-[11px] font-bold text-neutral-300 capitalize">
+                  <span className="text-[11px] font-bold text-neutral-300 capitalize truncate max-w-[180px]">
                     {currentQ.topic}
                   </span>
                 </div>
 
                 <div
-                  className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full ${
+                  className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full shrink-0 ${
                     secondsRemaining < 60
                       ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 animate-pulse'
                       : 'bg-neutral-900 text-amber-300 border border-amber-500/40'
@@ -789,7 +952,7 @@ export function AssessmentsView({
                   </span>
                   <div>
                     <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
-                      Assessment Diagnostics Complete
+                      {customTestTitle ? `${customTestTitle} Diagnostics Complete` : 'Assessment Diagnostics Complete'}
                     </h3>
                     <p className="text-[11px] text-neutral-400">
                       Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
@@ -874,23 +1037,56 @@ export function AssessmentsView({
                 </div>
               )}
 
-              {/* Review Answers Toggle */}
-              <div className="flex gap-2">
+              {/* Review Answers & Actions */}
+              <div className="flex flex-wrap gap-2">
                 <button
                   id="review-answers-btn"
                   onClick={() => setShowReviewExplanations(!showReviewExplanations)}
-                  className="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold border border-neutral-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="flex-1 min-w-[170px] py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold border border-neutral-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <HelpCircle className="w-4 h-4 text-amber-400" />
+                  <HelpCircle className="w-4 h-4 text-amber-400 shrink-0" />
                   <span>{showReviewExplanations ? 'Hide Solutions' : 'Review Step-by-Step Solutions'}</span>
                 </button>
-                <button
-                  onClick={handleStartAptitudeTest}
-                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Retake</span>
-                </button>
+                {customTestPool ? (
+                  <button
+                    onClick={() => {
+                      setTestResult(null);
+                      setCurrentQuestionIndex(0);
+                      setSelectedAnswers({});
+                      setMarkedForReview({});
+                      setShowReviewExplanations(false);
+                      setIsTestActive(true);
+                      setSecondsRemaining(customTestPool.length * 75);
+                    }}
+                    className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Retake Mock</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleStartAptitudeTest}
+                    className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Retake</span>
+                  </button>
+                )}
+                {assessmentMode === 'day_wise' && (
+                  <button
+                    onClick={() => {
+                      setTestResult(null);
+                      setIsTestActive(false);
+                      setCustomTestPool(null);
+                      setCustomTestTitle(null);
+                      setActiveDayDomainKey(null);
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 border border-amber-500/30 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Calendar className="w-4 h-4 text-amber-400" />
+                    <span>Return to Day-Wise Placement Dashboard</span>
+                  </button>
+                )}
               </div>
 
               {/* Detailed Solutions Accordion */}

@@ -6,6 +6,7 @@ import {
   Badge,
   PersonalizedRoadmap,
 } from '../types';
+import { ALL_DAY_1_QUESTIONS } from './dayWiseMockTests';
 
 export function createDefaultProfile(user: {
   uid: string;
@@ -35,7 +36,8 @@ export function createDefaultProfile(user: {
 }
 
 export const APTITUDE_QUESTION_BANK: AptitudeQuestion[] = [
-  // VERBAL ABILITY
+  ...ALL_DAY_1_QUESTIONS,
+  // Additional practice questions:
   {
     id: 'apt_07',
     category: 'verbal',
