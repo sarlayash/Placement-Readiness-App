@@ -12,7 +12,7 @@ export async function downloadElementAsPNG(
     const dataUrl = await toPng(element, {
       quality: 1,
       pixelRatio: 2.5, // High resolution for crisp print/retina display
-      backgroundColor: '#000000',
+      backgroundColor: '#050814',
       filter: (node) => {
         // Exclude elements marked as print-hidden or no-export
         if (node instanceof HTMLElement && node.classList.contains('no-export')) {

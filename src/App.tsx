@@ -472,12 +472,19 @@ export default function App() {
   const unlockedBadgeCount = badges.filter((b) => b.unlocked).length;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans antialiased selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#050814] text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white relative overflow-x-hidden">
+      {/* Fortune 500 Ambient Lighting Radial Mesh */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-gradient-to-b from-blue-600/15 via-indigo-600/10 to-transparent blur-3xl rounded-full" />
+        <div className="absolute top-1/3 -left-40 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full" />
+        <div className="absolute top-2/3 -right-40 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full" />
+      </div>
+
       {/* Device Frame Wrapper (Togglable for simulated smartphone or responsive view) */}
       <div
-        className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 ${
+        className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 relative z-10 ${
           isDeviceFrame
-            ? 'max-w-[430px] my-4 md:my-6 rounded-[40px] border-[8px] border-neutral-800 shadow-2xl shadow-amber-950/20 overflow-hidden relative min-h-[850px] bg-black'
+            ? 'max-w-[430px] my-4 md:my-6 rounded-[40px] border-[8px] border-slate-800 shadow-2xl shadow-blue-950/40 overflow-hidden relative min-h-[850px] bg-[#080d1e]'
             : isAdminMode
             ? 'max-w-5xl'
             : 'max-w-2xl'
@@ -485,8 +492,8 @@ export default function App() {
       >
         {/* Device Frame Notch (when in device frame mode) */}
         {isDeviceFrame && (
-          <div className="w-32 h-4 bg-neutral-800 rounded-b-xl mx-auto z-40 relative flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-black border border-neutral-700" />
+          <div className="w-32 h-4 bg-slate-800 rounded-b-xl mx-auto z-40 relative flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-[#050814] border border-slate-700" />
           </div>
         )}
 

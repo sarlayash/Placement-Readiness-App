@@ -88,55 +88,55 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
 
   return (
     <div className="space-y-4 pb-20 max-w-lg mx-auto text-white">
-      {/* Executive Header Card (Black, White & Gold) */}
-      <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl relative overflow-hidden">
-        {/* Subtle Gold Ambient Glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Executive Header Card (Fortune 500 Suite) */}
+      <div className="f500-card bg-[#060c1d]/90 border border-blue-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden">
+        {/* Subtle Blue Ambient Glow */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-2.5">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
-              <Award className="w-5 h-5 text-black stroke-[2.5]" />
+            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/25 border border-sky-400/30">
+              <Award className="w-5 h-5 text-white stroke-[2.2]" />
             </span>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm font-black text-amber-300 tracking-wide uppercase">
+                <h2 className="text-sm font-black text-white tracking-wide uppercase font-['Outfit',sans-serif]">
                   Assessment Badges
                 </h2>
-                <span className="text-[9px] bg-amber-500/20 text-amber-300 font-extrabold px-1.5 py-0.5 rounded border border-amber-500/30">
+                <span className="text-[9px] bg-sky-500/20 text-sky-300 font-extrabold px-1.5 py-0.5 rounded border border-sky-500/30">
                   PNG ONLY
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-300 mt-0.5">
-                Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                Certified By <strong className="text-sky-300">SarlaYash Mission</strong> • Powered By <strong className="text-amber-300">Kapil</strong>
               </p>
             </div>
           </div>
-          <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40 shrink-0">
+          <span className="text-xs font-black px-2.5 py-1 rounded-full bg-blue-500/15 text-sky-300 border border-blue-500/40 shrink-0">
             {unlockedCount} / {badges.length}
           </span>
         </div>
 
-        {/* Gold Metallic Progress bar */}
-        <div className="mt-4 pt-3 border-t border-neutral-900">
-          <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-1.5 font-medium">
+        {/* Progress bar */}
+        <div className="mt-4 pt-3 border-t border-slate-800/80">
+          <div className="flex justify-between items-center text-[10px] text-slate-400 mb-1.5 font-medium">
             <span>Overall Badge Completion</span>
-            <span className="text-amber-400 font-bold">{Math.round((unlockedCount / badges.length) * 100)}%</span>
+            <span className="text-sky-300 font-bold">{Math.round((unlockedCount / badges.length) * 100)}%</span>
           </div>
-          <div className="w-full bg-neutral-900 border border-neutral-800 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-slate-950 border border-slate-800 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 h-full rounded-full transition-all duration-500 shadow-sm shadow-amber-500/50"
+              className="bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400 h-full rounded-full transition-all duration-500 shadow-sm shadow-blue-500/50"
               style={{ width: `${(unlockedCount / badges.length) * 100}%` }}
             />
           </div>
-          <p className="text-[10px] text-neutral-400 mt-2 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+          <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-sky-400 shrink-0" />
             <span>Click any badge below to inspect credentials and download in <strong>PNG format only</strong>.</span>
           </p>
         </div>
       </div>
 
-      {/* Badges Grid (Black & Gold Cards) */}
+      {/* Badges Grid (Fortune 500 Executive Cards) */}
       <div className="grid grid-cols-2 gap-3">
         {badges.map((badge) => {
           const rarityStyle = getRarityBadge(badge.rarity);
@@ -147,17 +147,17 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
               onClick={() => setSelectedBadge(badge)}
               className={`p-3.5 rounded-2xl text-left border transition-all relative overflow-hidden group flex flex-col justify-between cursor-pointer ${
                 badge.unlocked
-                  ? 'bg-neutral-950 border-amber-500/30 hover:border-amber-400 shadow-md shadow-black hover:shadow-amber-500/10'
-                  : 'bg-black border-neutral-900 opacity-60 hover:opacity-80'
+                  ? 'bg-[#060c1e]/90 border-blue-500/25 hover:border-blue-400 shadow-lg shadow-black hover:shadow-blue-500/10'
+                  : 'bg-[#040816]/70 border-slate-800/60 opacity-60 hover:opacity-80'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-neutral-900 border border-amber-500/30 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900/90 border border-blue-500/30 flex items-center justify-center">
                     {badge.unlocked ? (
                       getBadgeIcon(badge.icon)
                     ) : (
-                      <Lock className="w-4 h-4 text-neutral-500" />
+                      <Lock className="w-4 h-4 text-slate-500" />
                     )}
                   </div>
                   <span
@@ -167,30 +167,30 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
                   </span>
                 </div>
 
-                <h3 className="text-xs font-bold text-white truncate group-hover:text-amber-300 transition-colors">
+                <h3 className="text-xs font-bold text-white truncate group-hover:text-sky-300 transition-colors">
                   {badge.title}
                 </h3>
-                <p className="text-[11px] text-neutral-400 mt-1 line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                   {badge.description}
                 </p>
               </div>
 
               {/* Status / PNG Download Button */}
-              <div className="mt-3 pt-2.5 border-t border-neutral-900 text-[10px]">
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px]">
                 {badge.unlocked ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-amber-400 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-amber-400" />
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>Unlocked</span>
                       </span>
-                      <span className="text-[9px] text-neutral-400">{badge.unlockedAt || 'Verified'}</span>
+                      <span className="text-[9px] text-slate-400">{badge.unlockedAt || 'Verified'}</span>
                     </div>
 
                     <button
                       onClick={(e) => handleDownloadPNG(badge, e)}
                       disabled={isDownloading}
-                      className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 transition-all shadow-sm shadow-amber-500/20 active:scale-95"
+                      className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 transition-all shadow-sm shadow-amber-500/20 active:scale-95 cursor-pointer"
                     >
                       <Download className="w-3 h-3" />
                       <span>{isDownloading ? 'Exporting...' : 'Download PNG'}</span>
@@ -198,15 +198,15 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
                   </div>
                 ) : (
                   <div>
-                    <div className="flex justify-between text-neutral-400 mb-1">
+                    <div className="flex justify-between text-slate-400 mb-1">
                       <span>Progress</span>
-                      <span className="text-amber-400 font-semibold">
+                      <span className="text-sky-400 font-semibold">
                         {badge.progress} / {badge.maxProgress}
                       </span>
                     </div>
-                    <div className="w-full bg-neutral-900 rounded-full h-1 overflow-hidden border border-neutral-800">
+                    <div className="w-full bg-slate-950 rounded-full h-1 overflow-hidden border border-slate-800">
                       <div
-                        className="bg-amber-400 h-full rounded-full"
+                        className="bg-blue-500 h-full rounded-full"
                         style={{
                           width: `${Math.min(100, (badge.progress / badge.maxProgress) * 100)}%`,
                         }}
@@ -220,14 +220,14 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
         })}
       </div>
 
-      {/* Badge Detail Modal (Black & Gold Master Dossier) */}
+      {/* Badge Detail Modal (Fortune 500 Executive Dossier) */}
       {selectedBadge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="bg-black border-2 border-amber-500/50 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative overflow-hidden">
-            {/* Ambient gold glow */}
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#02050e]/90 backdrop-blur-xl animate-fade-in">
+          <div className="bg-[#060c1d] border border-blue-500/40 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center relative overflow-hidden f500-glow">
+            {/* Ambient blue glow */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="w-18 h-18 rounded-2xl bg-neutral-900 border-2 border-amber-400/60 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20 relative z-10">
+            <div className="w-18 h-18 rounded-2xl bg-slate-900/90 border-2 border-blue-400/60 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20 relative z-10">
               {getBadgeIcon(selectedBadge.icon)}
             </div>
 
@@ -239,30 +239,30 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
               >
                 {selectedBadge.rarity} Badge • {selectedBadge.category}
               </span>
-              <h3 className="text-lg font-black text-white mt-2">
+              <h3 className="text-lg font-black text-white mt-2 font-['Outfit',sans-serif]">
                 {selectedBadge.title}
               </h3>
-              <p className="text-xs text-neutral-300 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 {selectedBadge.description}
               </p>
             </div>
 
             {/* Official Accreditation Box */}
-            <div className="bg-neutral-950 p-3.5 rounded-xl border border-amber-500/30 text-xs space-y-1.5 text-neutral-300 text-left relative z-10">
-              <div className="flex justify-between border-b border-neutral-900 pb-1.5">
-                <span className="text-neutral-400">Awarded To:</span>
-                <span className="text-amber-300 font-bold">{profile.fullName || 'Learner'}</span>
+            <div className="bg-[#040816] p-3.5 rounded-xl border border-slate-800 text-xs space-y-1.5 text-slate-300 text-left relative z-10">
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Awarded To:</span>
+                <span className="text-sky-300 font-bold">{profile.fullName || 'Learner'}</span>
               </div>
-              <div className="flex justify-between border-b border-neutral-900 pb-1.5">
-                <span className="text-neutral-400">Accredited By:</span>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Accredited By:</span>
                 <span className="text-white font-medium">SarlaYash Mission</span>
               </div>
-              <div className="flex justify-between border-b border-neutral-900 pb-1.5">
-                <span className="text-neutral-400">Chief Mentor:</span>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Chief Mentor:</span>
                 <span className="text-white font-medium">Powered By Kapil</span>
               </div>
               <div className="flex justify-between pt-0.5">
-                <span className="text-neutral-400">Format:</span>
+                <span className="text-slate-400">Format:</span>
                 <span className="text-amber-400 font-extrabold">PNG Format Only</span>
               </div>
             </div>
@@ -273,22 +273,22 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
               <button
                 onClick={() => handleDownloadPNG(selectedBadge)}
                 disabled={downloadingId === selectedBadge.id}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
               >
-                <Download className="w-4 h-4 text-black stroke-[2.5]" />
+                <Download className="w-4 h-4 text-slate-950 stroke-[2.5]" />
                 <span>{downloadingId === selectedBadge.id ? 'Generating PNG...' : 'Download Badge (PNG Only)'}</span>
               </button>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelectedBadge(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 text-xs font-bold border border-neutral-800"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-800"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleShareBadge(selectedBadge)}
-                  className="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-blue-500/40 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   <span>{copiedShare ? 'Copied Link!' : 'Share'}</span>
