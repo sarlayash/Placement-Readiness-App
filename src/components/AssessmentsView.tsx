@@ -15,6 +15,8 @@ import {
   Check,
   Award,
   Lightbulb,
+  AlertTriangle,
+  Zap,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -24,6 +26,7 @@ import {
   TestCaseResult,
 } from '../types';
 import { runJavaScriptProblem } from '../utils/codeRunner';
+import { SpinningWheelModal, WheelReward } from './SpinningWheelModal';
 
 interface AssessmentsViewProps {
   questions: AptitudeQuestion[];
@@ -55,6 +58,20 @@ export function AssessmentsView({
   const [scratchpad, setScratchpad] = useState('');
   const [showScratchpad, setShowScratchpad] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Spinning Wheel for 1 MCQ state
+  const [showWheelModal, setShowWheelModal] = useState(false);
+  const [wheelReward, setWheelReward] = useState<WheelReward | null>(null);
+  const [wheelQuestionId, setWheelQuestionId] = useState<string | null>(null);
+  const [eliminatedOptions, setEliminatedOptions] = useState<Record<string, number[]>>({});
+  const [wheelBonusSummary, setWheelBonusSummary] = useState<{
+    applied: boolean;
+    won: boolean;
+    reward: WheelReward;
+    questionIndex: number;
+    bonusPoints: number;
+    reason?: string;
+  } | null>(null);
 
   // Coding state
   const [selectedProblemId, setSelectedProblemId] = useState<string>(codingProblems[0]?.id || 'code_01');
@@ -110,7 +127,28 @@ export function AssessmentsView({
     setSecondsRemaining(questions.length * 75); // 75 seconds per question
     setTestResult(null);
     setShowReviewExplanations(false);
+    // Reset spinning wheel state
+    setWheelReward(null);
+    setWheelQuestionId(null);
+    setEliminatedOptions({});
+    setWheelBonusSummary(null);
+    setShowWheelModal(false);
     setIsTestActive(true);
+  };
+
+  const handleRewardSelected = (reward: WheelReward) => {
+    const currentQ = questions[currentQuestionIndex];
+    setWheelReward(reward);
+    setWheelQuestionId(currentQ.id);
+
+    // If 50-50 lifeline: eliminate 2 incorrect options
+    if (reward.type === 'lifeline_5050') {
+      const wrongIndices = currentQ.options
+        .map((_, i) => i)
+        .filter((i) => i !== currentQ.correctIndex);
+      const eliminated = wrongIndices.slice(0, 2);
+      setEliminatedOptions((prev) => ({ ...prev, [currentQ.id]: eliminated }));
+    }
   };
 
   const handleSelectAnswer = (optionIndex: number) => {
@@ -144,7 +182,40 @@ export function AssessmentsView({
 
     const scorePct = Math.round((correctCount / questions.length) * 100);
     const timeSpent = questions.length * 75 - secondsRemaining;
-    const pointsDelta = Math.round(scorePct * 0.35) + 10;
+    let pointsDelta = Math.round(scorePct * 0.35) + 10;
+
+    // Handle Spinning Wheel Double Bonus logic:
+    // Rule: Double bonus is awarded ONLY if the question was answered correctly.
+    // Rule: Wrong answer strictly removes & forfeits all bonus points!
+    if (wheelReward && wheelQuestionId) {
+      const qIndex = questions.findIndex((q) => q.id === wheelQuestionId);
+      const targetQ = questions[qIndex];
+      const isCorrect = targetQ && selectedAnswers[wheelQuestionId] === targetQ.correctIndex;
+
+      if (isCorrect) {
+        const bonusPoints = wheelReward.bonusPoints;
+        pointsDelta += bonusPoints;
+        setWheelBonusSummary({
+          applied: true,
+          won: true,
+          reward: wheelReward,
+          questionIndex: qIndex,
+          bonusPoints,
+        });
+      } else {
+        // REMOVE BONUS FOR WRONG ANSWERS: 0 bonus points awarded!
+        setWheelBonusSummary({
+          applied: true,
+          won: false,
+          reward: wheelReward,
+          questionIndex: qIndex,
+          bonusPoints: 0,
+          reason: 'Incorrect answer on wheel MCQ forfeited the bonus points',
+        });
+      }
+    } else {
+      setWheelBonusSummary(null);
+    }
 
     const result: AptitudeAssessmentResult = {
       id: `apt_res_${Date.now()}`,
@@ -385,6 +456,7 @@ export function AssessmentsView({
                   const isAnswered = selectedAnswers[q.id] !== undefined;
                   const isMarked = markedForReview[q.id];
                   const isCurrent = idx === currentQuestionIndex;
+                  const hasWheelBonus = wheelQuestionId === q.id;
 
                   let chipStyle = 'bg-slate-800 text-slate-400 border-slate-700';
                   if (isCurrent) chipStyle = 'ring-2 ring-indigo-400 bg-indigo-900 text-white border-indigo-400';
@@ -395,13 +467,98 @@ export function AssessmentsView({
                     <button
                       key={q.id}
                       onClick={() => setCurrentQuestionIndex(idx)}
-                      className={`flex-shrink-0 w-7 h-7 rounded-lg text-xs font-bold border transition-all ${chipStyle}`}
+                      className={`relative flex-shrink-0 w-7 h-7 rounded-lg text-xs font-bold border transition-all ${chipStyle}`}
                     >
                       {idx + 1}
+                      {hasWheelBonus && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border border-slate-900" />
+                      )}
                     </button>
                   );
                 })}
               </div>
+
+              {/* SPINNING WHEEL FOR 1 MCQ BANNER & CONTROLS */}
+              {!wheelReward ? (
+                <div className="bg-gradient-to-r from-amber-500/15 via-slate-800/80 to-indigo-500/15 border border-amber-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 flex items-center justify-center font-black text-sm shadow-md animate-bounce">
+                      🎡
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-extrabold text-amber-300">
+                          Spin the Wheel for MCQ #{currentQuestionIndex + 1}
+                        </span>
+                        <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold border border-amber-500/30">
+                          1 Chance
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-300 mt-0.5">
+                        Spin for <strong className="text-amber-300">Double Bonus (2x Points)</strong>! Wrong answer removes bonus.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    id="spin-wheel-for-mcq-btn"
+                    onClick={() => setShowWheelModal(true)}
+                    className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/20 transition-all shrink-0"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Spin</span>
+                  </button>
+                </div>
+              ) : wheelQuestionId === questions[currentQuestionIndex].id ? (
+                <div className="bg-slate-950/80 border-2 border-amber-500/50 rounded-xl p-3 space-y-2 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎡</span>
+                      <div>
+                        <span className="text-xs font-black text-amber-300 block">
+                          Wheel Bonus Attached: {wheelReward.label} (+{wheelReward.bonusPoints} Pts)
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          Active for Question #{currentQuestionIndex + 1}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      {wheelReward.multiplier}x Multiplier
+                    </span>
+                  </div>
+
+                  {/* Real-time Status feedback on this question */}
+                  {selectedAnswers[questions[currentQuestionIndex].id] === undefined ? (
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-200/90 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>
+                        Answer correctly to lock in <strong>+{wheelReward.bonusPoints} bonus points</strong>. Any wrong answer immediately removes the bonus!
+                      </span>
+                    </div>
+                  ) : selectedAnswers[questions[currentQuestionIndex].id] === questions[currentQuestionIndex].correctIndex ? (
+                    <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 bg-emerald-500/15 p-2 rounded-lg border border-emerald-500/30">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        <strong>Correct Answer!</strong> Double Bonus Secured: <strong>+{wheelReward.bonusPoints} points</strong> will be added to your score!
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-[11px] text-rose-300 bg-rose-500/15 p-2 rounded-lg border border-rose-500/30">
+                      <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span>
+                        <strong>Wrong Answer!</strong> Bonus removed: <strong>0 bonus points</strong> awarded per rule.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-[10px] text-slate-400 bg-slate-800/30 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <span>
+                    Wheel bonus was applied to <strong>Question #{questions.findIndex((q) => q.id === wheelQuestionId) + 1}</strong>
+                  </span>
+                  <span className="text-amber-400 font-bold">{wheelReward.label}</span>
+                </div>
+              )}
 
               {/* Question Statement */}
               <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
@@ -414,6 +571,27 @@ export function AssessmentsView({
               <div className="space-y-2">
                 {questions[currentQuestionIndex].options.map((option, optIdx) => {
                   const isSelected = selectedAnswers[questions[currentQuestionIndex].id] === optIdx;
+                  const isEliminated = eliminatedOptions[questions[currentQuestionIndex].id]?.includes(optIdx);
+
+                  if (isEliminated) {
+                    return (
+                      <div
+                        key={optIdx}
+                        className="w-full text-left p-3 rounded-xl text-xs font-medium border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-50"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-slate-800 text-slate-600">
+                            {String.fromCharCode(65 + optIdx)}
+                          </span>
+                          <span className="line-through">{option}</span>
+                        </div>
+                        <span className="text-[9px] uppercase font-bold text-slate-600 bg-slate-800/40 px-1.5 py-0.5 rounded">
+                          50-50 Eliminated
+                        </span>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={optIdx}
@@ -561,6 +739,44 @@ export function AssessmentsView({
                   </div>
                 ))}
               </div>
+
+              {/* Lucky Wheel Spin Bonus Outcome */}
+              {wheelBonusSummary && wheelBonusSummary.applied && (
+                <div
+                  className={`p-3 rounded-xl border flex items-start gap-3 ${
+                    wheelBonusSummary.won
+                      ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                      : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+                  }`}
+                >
+                  <div className="text-xl">
+                    {wheelBonusSummary.won ? '🎉' : '❌'}
+                  </div>
+                  <div className="flex-1 text-xs space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        Lucky Wheel Spin (MCQ #{wheelBonusSummary.questionIndex + 1})
+                      </span>
+                      <span
+                        className={`font-black px-2 py-0.5 rounded text-[10px] uppercase ${
+                          wheelBonusSummary.won
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        }`}
+                      >
+                        {wheelBonusSummary.won
+                          ? `+${wheelBonusSummary.bonusPoints} Pts Added (${wheelBonusSummary.reward.multiplier}x)`
+                          : 'Bonus Forfeited (0 Pts)'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-1">
+                      {wheelBonusSummary.won
+                        ? `Congratulations! You answered Question #${wheelBonusSummary.questionIndex + 1} correctly and secured your ${wheelBonusSummary.reward.label} (+${wheelBonusSummary.bonusPoints} points)!`
+                        : `Question #${wheelBonusSummary.questionIndex + 1} was answered incorrectly. Per assessment rules, the double bonus was removed and 0 bonus points were awarded.`}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Review Answers Toggle */}
               <div className="flex gap-2">
@@ -911,6 +1127,15 @@ export function AssessmentsView({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Lucky Wheel Modal for 1 MCQ */}
+      {showWheelModal && (
+        <SpinningWheelModal
+          questionNumber={currentQuestionIndex + 1}
+          onClose={() => setShowWheelModal(false)}
+          onRewardSelected={handleRewardSelected}
+        />
       )}
     </div>
   );

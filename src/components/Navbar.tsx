@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Smartphone, Monitor } from 'lucide-react';
+import { Flame, ShieldCheck, Smartphone, Monitor, Award } from 'lucide-react';
 import { StudentProfile } from '../types';
 
 interface NavbarProps {
@@ -7,6 +7,7 @@ interface NavbarProps {
   isDeviceFrame: boolean;
   onToggleDeviceFrame: () => void;
   onOpenProfile: () => void;
+  onOpenCertificate?: () => void;
 }
 
 export function Navbar({
@@ -15,6 +16,7 @@ export function Navbar({
   isDeviceFrame,
   onToggleDeviceFrame,
   onOpenProfile,
+  onOpenCertificate,
 }: NavbarProps) {
   return (
     <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 py-2.5 transition-all">
@@ -59,6 +61,19 @@ export function Navbar({
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>PRS {readinessScore}</span>
           </div>
+
+          {/* Official Certificate Button */}
+          {onOpenCertificate && (
+            <button
+              id="nav-certificate-btn"
+              onClick={onOpenCertificate}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition-all shadow-sm"
+              title="View Placement Readiness Certificate (Certified By SarlaYash Mission Powered By Kapil)"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Certificate</span>
+            </button>
+          )}
 
           {/* Toggle Device Frame (useful for previewing on desktop) */}
           <button

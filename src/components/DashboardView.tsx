@@ -26,6 +26,7 @@ interface DashboardViewProps {
   onStartAptitude: () => void;
   onStartCoding: () => void;
   onOpenCompanyModal: () => void;
+  onOpenCertificate?: () => void;
 }
 
 export function DashboardView({
@@ -36,6 +37,7 @@ export function DashboardView({
   onStartAptitude,
   onStartCoding,
   onOpenCompanyModal,
+  onOpenCertificate,
 }: DashboardViewProps) {
   const earnedBadges = badges.filter((b) => b.unlocked);
 
@@ -199,6 +201,40 @@ export function DashboardView({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Official Placement Certificate Showcase Banner */}
+      <div
+        id="official-certificate-banner"
+        className="relative overflow-hidden bg-gradient-to-r from-amber-500/20 via-slate-900 to-indigo-950/40 border-2 border-amber-500/40 rounded-2xl p-4 shadow-lg flex items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/20 shrink-0">
+            <Award className="w-6 h-6 text-slate-950 stroke-[2.2]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black text-amber-300 tracking-wide uppercase">
+                Placement Readiness Certificate
+              </span>
+              <span className="text-[9px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
+                Official
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Certified By <strong className="text-amber-200">SarlaYash Mission</strong> • Powered By <strong className="text-amber-200">Kapil</strong>
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpenCertificate}
+          id="view-certificate-btn"
+          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all shrink-0 cursor-pointer"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>View</span>
+        </button>
       </div>
 
       {/* Today's High-Yield Recommendation Banner */}

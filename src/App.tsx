@@ -14,6 +14,7 @@ import { BadgesView } from './components/BadgesView';
 import { ProfileView } from './components/ProfileView';
 import { CompanyIntelligenceModal } from './components/CompanyIntelligenceModal';
 import { GoogleAuthScreen } from './components/GoogleAuthScreen';
+import { CertificateModal } from './components/CertificateModal';
 
 import {
   StudentProfile,
@@ -72,6 +73,7 @@ export default function App() {
   const [assessmentSubTab, setAssessmentSubTab] = useState<'aptitude' | 'coding'>('aptitude');
   const [isDeviceFrame, setIsDeviceFrame] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
 
   // 1. Listen to Firebase Authentication State
   useEffect(() => {
@@ -361,6 +363,7 @@ export default function App() {
               setCurrentTab('assessments');
             }}
             onOpenCompanyModal={() => setShowCompanyModal(true)}
+            onOpenCertificate={() => setShowCertificateModal(true)}
           />
         );
       case 'assessments':
@@ -436,6 +439,7 @@ export default function App() {
           isDeviceFrame={isDeviceFrame}
           onToggleDeviceFrame={() => setIsDeviceFrame(!isDeviceFrame)}
           onOpenProfile={() => setCurrentTab('profile')}
+          onOpenCertificate={() => setShowCertificateModal(true)}
         />
 
         {/* Main Content Area */}
@@ -460,6 +464,15 @@ export default function App() {
             setShowCompanyModal(false);
             setCurrentTab('profile');
           }}
+        />
+      )}
+
+      {/* Official Placement Readiness Certificate Modal */}
+      {showCertificateModal && (
+        <CertificateModal
+          profile={profile}
+          readiness={readiness}
+          onClose={() => setShowCertificateModal(false)}
         />
       )}
     </div>
