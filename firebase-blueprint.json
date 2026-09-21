@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Learner profile registered via Google Auth",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "college": { "type": "string" },
+        "degree": { "type": "string" },
+        "branch": { "type": "string" },
+        "graduationYear": { "type": "number" },
+        "cgpa": { "type": "number" },
+        "targetRole": { "type": "string" },
+        "targetCompanyTier": { "type": "string" },
+        "githubUrl": { "type": "string" },
+        "linkedinUrl": { "type": "string" },
+        "resumeHeadline": { "type": "string" },
+        "skills": { "type": "array" },
+        "streakDays": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName"]
+    },
+    "AptitudeResult": {
+      "title": "AptitudeResult",
+      "description": "Learner aptitude assessment result",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "totalQuestions": { "type": "number" },
+        "correctAnswers": { "type": "number" },
+        "scorePercentage": { "type": "number" },
+        "timeSpentSeconds": { "type": "number" },
+        "readinessPointsDelta": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "scorePercentage"]
+    },
+    "CodingSubmission": {
+      "title": "CodingSubmission",
+      "description": "Learner coding challenge submission",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "problemId": { "type": "string" },
+        "language": { "type": "string" },
+        "code": { "type": "string" },
+        "passedCount": { "type": "number" },
+        "totalCount": { "type": "number" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "problemId", "status"]
+    },
+    "SkillItem": {
+      "title": "SkillItem",
+      "description": "Learner skill competency level",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "level": { "type": "number" },
+        "targetLevel": { "type": "number" },
+        "isVerified": { "type": "boolean" },
+        "lastAssessed": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "level"]
+    },
+    "BadgeRecord": {
+      "title": "BadgeRecord",
+      "description": "Learner earned badge status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "category": { "type": "string" },
+        "rarity": { "type": "string" },
+        "unlocked": { "type": "boolean" },
+        "unlockedAt": { "type": "string" },
+        "progress": { "type": "number" },
+        "maxProgress": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "unlocked"]
+    },
+    "RoadmapRecord": {
+      "title": "RoadmapRecord",
+      "description": "Learner personalized improvement roadmap",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "source": { "type": "string" },
+        "lastUpdated": { "type": "string" },
+        "overview": { "type": "string" },
+        "strengths": { "type": "array" },
+        "focusGaps": { "type": "array" },
+        "phases": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "overview"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Learner profile document keyed by auth UID"
+    },
+    "/users/{userId}/aptitudeResults/{resultId}": {
+      "schema": "AptitudeResult",
+      "description": "Learner aptitude assessment submissions"
+    },
+    "/users/{userId}/codingSubmissions/{submissionId}": {
+      "schema": "CodingSubmission",
+      "description": "Learner coding challenge submissions"
+    },
+    "/users/{userId}/skills/{skillId}": {
+      "schema": "SkillItem",
+      "description": "Learner skill ratings and assessments"
+    },
+    "/users/{userId}/badges/{badgeId}": {
+      "schema": "BadgeRecord",
+      "description": "Learner earned badges"
+    },
+    "/users/{userId}/roadmap/current": {
+      "schema": "RoadmapRecord",
+      "description": "Learner personalized placement roadmap"
+    }
+  }
+}

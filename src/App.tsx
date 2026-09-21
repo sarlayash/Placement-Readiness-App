@@ -13,6 +13,7 @@ import { RoadmapView } from './components/RoadmapView';
 import { BadgesView } from './components/BadgesView';
 import { ProfileView } from './components/ProfileView';
 import { CompanyIntelligenceModal } from './components/CompanyIntelligenceModal';
+import { GoogleAuthScreen } from './components/GoogleAuthScreen';
 
 import {
   StudentProfile,
@@ -24,239 +25,256 @@ import {
 } from './types';
 
 import {
-  INITIAL_STUDENT_PROFILE,
-  SAMPLE_PERSONAS,
   APTITUDE_QUESTION_BANK,
   CODING_PROBLEMS,
   INITIAL_SKILLS,
   INITIAL_BADGES,
   INITIAL_ROADMAP,
+  createDefaultProfile,
 } from './data/initialData';
 
 import { calculateReadinessScore } from './utils/scoreCalculator';
-
-const STORAGE_KEY_PREFIX = 'placement_iq_v1_';
+import { auth, onAuthStateChanged, logOut, type User } from './lib/firebase';
+import {
+  initializeUserAccount,
+  subscribeToUserProfile,
+  saveUserProfile,
+  subscribeToSkills,
+  saveSkillToFirestore,
+  subscribeToBadges,
+  saveBadgeToFirestore,
+  subscribeToAptitudeResults,
+  saveAptitudeResultToFirestore,
+  subscribeToCodingSubmissions,
+  saveCodingSubmissionToFirestore,
+  subscribeToRoadmap,
+  saveRoadmapToFirestore,
+} from './lib/firestoreService';
+import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  // 1. Persistent State
-  const [profile, setProfile] = useState<StudentProfile>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}profile`);
-      return saved ? JSON.parse(saved) : INITIAL_STUDENT_PROFILE;
-    } catch {
-      return INITIAL_STUDENT_PROFILE;
-    }
-  });
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const [skills, setSkills] = useState<SkillItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}skills`);
-      return saved ? JSON.parse(saved) : INITIAL_SKILLS;
-    } catch {
-      return INITIAL_SKILLS;
-    }
-  });
+  // Firestore Synced State
+  const [profile, setProfile] = useState<StudentProfile>(() =>
+    createDefaultProfile({ uid: 'guest', displayName: 'Learner', email: '' })
+  );
+  const [skills, setSkills] = useState<SkillItem[]>(INITIAL_SKILLS);
+  const [codingSubmissions, setCodingSubmissions] = useState<CodingSubmission[]>([]);
+  const [aptitudeResults, setAptitudeResults] = useState<AptitudeAssessmentResult[]>([]);
+  const [badges, setBadges] = useState<Badge[]>(INITIAL_BADGES);
+  const [roadmap, setRoadmap] = useState<PersonalizedRoadmap>(INITIAL_ROADMAP);
 
-  const [codingSubmissions, setCodingSubmissions] = useState<CodingSubmission[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}submissions`);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [aptitudeResults, setAptitudeResults] = useState<AptitudeAssessmentResult[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}aptitude`);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [badges, setBadges] = useState<Badge[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}badges`);
-      return saved ? JSON.parse(saved) : INITIAL_BADGES;
-    } catch {
-      return INITIAL_BADGES;
-    }
-  });
-
-  const [roadmap, setRoadmap] = useState<PersonalizedRoadmap>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}roadmap`);
-      return saved ? JSON.parse(saved) : INITIAL_ROADMAP;
-    } catch {
-      return INITIAL_ROADMAP;
-    }
-  });
-
-  // 2. UI Navigation & Frame State
+  // UI Navigation & Layout
   const [currentTab, setCurrentTab] = useState<TabType>('dashboard');
   const [assessmentSubTab, setAssessmentSubTab] = useState<'aptitude' | 'coding'>('aptitude');
   const [isDeviceFrame, setIsDeviceFrame] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
 
-  // Sync state to LocalStorage
+  // 1. Listen to Firebase Authentication State
   useEffect(() => {
-    try {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}profile`, JSON.stringify(profile));
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}skills`, JSON.stringify(skills));
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}submissions`, JSON.stringify(codingSubmissions));
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}aptitude`, JSON.stringify(aptitudeResults));
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}badges`, JSON.stringify(badges));
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}roadmap`, JSON.stringify(roadmap));
-    } catch (e) {
-      console.warn('LocalStorage error:', e);
-    }
-  }, [profile, skills, codingSubmissions, aptitudeResults, badges, roadmap]);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        try {
+          const initialProf = await initializeUserAccount(user);
+          if (initialProf) {
+            setProfile(initialProf);
+          }
+        } catch (err) {
+          console.error('Error initializing user account in Firestore:', err);
+        }
+      }
+      setAuthLoading(false);
+    });
 
-  // Dynamic Placement Readiness Score
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Real-time Firestore Listeners for Signed-In User
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubProfile = subscribeToUserProfile(currentUser.uid, (data) => {
+      setProfile(data);
+    });
+
+    const unsubSkills = subscribeToSkills(currentUser.uid, (data) => {
+      setSkills(data);
+    });
+
+    const unsubBadges = subscribeToBadges(currentUser.uid, (data) => {
+      setBadges(data);
+    });
+
+    const unsubAptitude = subscribeToAptitudeResults(currentUser.uid, (data) => {
+      setAptitudeResults(data);
+    });
+
+    const unsubCoding = subscribeToCodingSubmissions(currentUser.uid, (data) => {
+      setCodingSubmissions(data);
+    });
+
+    const unsubRoadmap = subscribeToRoadmap(currentUser.uid, (data) => {
+      setRoadmap(data);
+    });
+
+    return () => {
+      unsubProfile();
+      unsubSkills();
+      unsubBadges();
+      unsubAptitude();
+      unsubCoding();
+      unsubRoadmap();
+    };
+  }, [currentUser]);
+
+  // 3. Dynamic Placement Readiness Score (Earned calculation)
   const readiness = useMemo(() => {
     return calculateReadinessScore(profile, skills, codingSubmissions, aptitudeResults);
   }, [profile, skills, codingSubmissions, aptitudeResults]);
 
-  // Check and unlock badges automatically based on accomplishments
+  // 4. Genuine Badge Unlocking with Firestore Synchronization
   useEffect(() => {
-    setBadges((prevBadges) => {
-      let changed = false;
-      const today = new Date().toISOString().split('T')[0];
+    if (!currentUser) return;
 
-      const updated = prevBadges.map((badge) => {
-        let isNowUnlocked = badge.unlocked;
-        let progress = badge.progress;
+    const today = new Date().toISOString().split('T')[0];
 
-        if (badge.id === 'b_01') {
-          // First Code Blood
-          const accepted = codingSubmissions.filter((s) => s.status === 'Accepted');
-          if (accepted.length > 0 && !badge.unlocked) {
-            isNowUnlocked = true;
-            progress = 1;
-            changed = true;
-          }
-        } else if (badge.id === 'b_02') {
-          // Aptitude Ace
-          const hasAce = aptitudeResults.some((r) => r.scorePercentage >= 80);
-          if (hasAce && !badge.unlocked) {
-            isNowUnlocked = true;
-            progress = 1;
-            changed = true;
-          }
-        } else if (badge.id === 'b_04') {
-          // 700 Club
-          progress = readiness.overallScore;
-          if (readiness.overallScore >= 700 && !badge.unlocked) {
-            isNowUnlocked = true;
-            changed = true;
-          }
-        } else if (badge.id === 'b_05') {
-          // Algorithm Artisan
-          const acceptedCount = new Set(
-            codingSubmissions.filter((s) => s.status === 'Accepted').map((s) => s.problemId)
-          ).size;
-          progress = acceptedCount;
-          if (acceptedCount >= 10 && !badge.unlocked) {
-            isNowUnlocked = true;
-            changed = true;
-          }
-        } else if (badge.id === 'b_06') {
-          // Tier-1 Candidate (850+)
-          progress = readiness.overallScore;
-          if (readiness.overallScore >= 850 && !badge.unlocked) {
-            isNowUnlocked = true;
-            changed = true;
-          }
-        } else if (badge.id === 'b_07') {
-          // Complete Profile Vanguard
-          if (profile.githubUrl && profile.linkedinUrl && profile.skills.length >= 5 && !badge.unlocked) {
-            isNowUnlocked = true;
-            progress = 1;
-            changed = true;
-          }
+    badges.forEach((badge) => {
+      let shouldUnlock = badge.unlocked;
+      let newProgress = badge.progress;
+
+      if (badge.id === 'b_01') {
+        // First Code Blood: solve at least 1 problem
+        const accepted = codingSubmissions.filter((s) => s.status === 'Accepted');
+        if (accepted.length > 0) {
+          newProgress = 1;
+          if (!badge.unlocked) shouldUnlock = true;
         }
-
-        if (isNowUnlocked !== badge.unlocked || progress !== badge.progress) {
-          return {
-            ...badge,
-            unlocked: isNowUnlocked,
-            unlockedAt: isNowUnlocked && !badge.unlocked ? today : badge.unlockedAt,
-            progress,
-          };
+      } else if (badge.id === 'b_02') {
+        // Aptitude Ace: score >= 80% on a test
+        const hasAce = aptitudeResults.some((r) => r.scorePercentage >= 80);
+        if (hasAce) {
+          newProgress = 1;
+          if (!badge.unlocked) shouldUnlock = true;
         }
-        return badge;
-      });
+      } else if (badge.id === 'b_04') {
+        // 700 Club: cross 700 PRS
+        newProgress = readiness.overallScore;
+        if (readiness.overallScore >= 700 && !badge.unlocked) {
+          shouldUnlock = true;
+        }
+      } else if (badge.id === 'b_05') {
+        // Algorithm Artisan: solve 10 problems
+        const acceptedCount = new Set(
+          codingSubmissions.filter((s) => s.status === 'Accepted').map((s) => s.problemId)
+        ).size;
+        newProgress = acceptedCount;
+        if (acceptedCount >= 10 && !badge.unlocked) {
+          shouldUnlock = true;
+        }
+      } else if (badge.id === 'b_06') {
+        // Tier-1 Candidate: 850+ PRS
+        newProgress = readiness.overallScore;
+        if (readiness.overallScore >= 850 && !badge.unlocked) {
+          shouldUnlock = true;
+        }
+      } else if (badge.id === 'b_07') {
+        // Complete Profile Vanguard
+        if (profile.college && profile.degree && profile.targetRole && profile.skills.length >= 3) {
+          newProgress = 1;
+          if (!badge.unlocked) shouldUnlock = true;
+        }
+      }
 
-      return changed ? updated : prevBadges;
+      if (shouldUnlock !== badge.unlocked || newProgress !== badge.progress) {
+        saveBadgeToFirestore(currentUser.uid, {
+          ...badge,
+          unlocked: shouldUnlock,
+          unlockedAt: shouldUnlock && !badge.unlocked ? today : badge.unlockedAt,
+          progress: newProgress,
+        });
+      }
     });
-  }, [codingSubmissions, aptitudeResults, readiness.overallScore, profile]);
+  }, [codingSubmissions, aptitudeResults, readiness.overallScore, profile, currentUser, badges]);
 
-  // Handlers
-  const handleCompleteAptitude = (result: AptitudeAssessmentResult) => {
-    setAptitudeResults((prev) => [result, ...prev]);
+  // Handlers for Assessments & Mutations
+  const handleCompleteAptitude = async (result: AptitudeAssessmentResult) => {
+    if (!currentUser) return;
+    await saveAptitudeResultToFirestore(currentUser.uid, result);
 
-    // Boost verified aptitude skills
-    setSkills((prev) =>
-      prev.map((s) => {
-        if (s.category === 'Aptitude & Logic') {
-          return {
-            ...s,
-            level: Math.min(100, Math.max(s.level, Math.round(result.scorePercentage * 0.95))),
-            isVerified: true,
-            lastAssessed: 'Today',
-          };
-        }
-        return s;
-      })
-    );
-  };
-
-  const handleSubmitCoding = (submission: CodingSubmission) => {
-    setCodingSubmissions((prev) => [submission, ...prev]);
-
-    // If accepted, update DSA skill
-    if (submission.status === 'Accepted') {
-      setSkills((prev) =>
-        prev.map((s) => {
-          if (s.name.includes('Arrays') || s.name.includes('Stack')) {
-            return {
-              ...s,
-              level: Math.min(100, s.level + 4),
-              isVerified: true,
-              lastAssessed: 'Today',
-            };
-          }
-          return s;
-        })
-      );
+    // Update verified aptitude skills in Firestore
+    for (const skill of skills) {
+      if (skill.category === 'Aptitude & Logic') {
+        const updatedLevel = Math.min(100, Math.max(skill.level, Math.round(result.scorePercentage * 0.95)));
+        await saveSkillToFirestore(currentUser.uid, {
+          ...skill,
+          level: updatedLevel,
+          isVerified: true,
+          lastAssessed: 'Today',
+        });
+      }
     }
   };
 
-  const handleUpdateSkillLevel = (skillId: string, newLevel: number) => {
-    setSkills((prev) =>
-      prev.map((s) => (s.id === skillId ? { ...s, level: newLevel } : s))
-    );
+  const handleSubmitCoding = async (submission: CodingSubmission) => {
+    if (!currentUser) return;
+    await saveCodingSubmissionToFirestore(currentUser.uid, submission);
+
+    // If accepted, update DSA skill level in Firestore
+    if (submission.status === 'Accepted') {
+      for (const skill of skills) {
+        if (skill.name.includes('Arrays') || skill.name.includes('Stack')) {
+          const updatedLevel = Math.min(100, skill.level + 15);
+          await saveSkillToFirestore(currentUser.uid, {
+            ...skill,
+            level: updatedLevel,
+            isVerified: true,
+            lastAssessed: 'Today',
+          });
+        }
+      }
+    }
   };
 
-  const handleToggleMilestone = (phaseId: string, milestoneId: string) => {
-    setRoadmap((prev) => ({
-      ...prev,
-      phases: prev.phases.map((ph) => {
-        if (ph.id === phaseId) {
-          return {
-            ...ph,
-            milestones: ph.milestones.map((m) =>
-              m.id === milestoneId ? { ...m, completed: !m.completed } : m
-            ),
-          };
-        }
-        return ph;
-      }),
-    }));
+  const handleUpdateSkillLevel = async (skillId: string, newLevel: number) => {
+    if (!currentUser) return;
+    const targetSkill = skills.find((s) => s.id === skillId);
+    if (targetSkill) {
+      await saveSkillToFirestore(currentUser.uid, { ...targetSkill, level: newLevel });
+    }
+  };
+
+  const handleUpdateProfile = async (updated: StudentProfile) => {
+    if (!currentUser) return;
+    await saveUserProfile(currentUser.uid, updated);
+  };
+
+  const handleToggleMilestone = async (phaseId: string, milestoneId: string) => {
+    if (!currentUser) return;
+    const updatedPhases = roadmap.phases.map((ph) => {
+      if (ph.id === phaseId) {
+        return {
+          ...ph,
+          milestones: ph.milestones.map((m) =>
+            m.id === milestoneId ? { ...m, completed: !m.completed } : m
+          ),
+        };
+      }
+      return ph;
+    });
+
+    const updatedRoadmap = {
+      ...roadmap,
+      phases: updatedPhases,
+    };
+    await saveRoadmapToFirestore(currentUser.uid, updatedRoadmap);
   };
 
   const handleRegenerateRoadmap = async () => {
+    if (!currentUser) return;
     try {
       const res = await fetch('/api/ai/roadmap', {
         method: 'POST',
@@ -273,7 +291,7 @@ export default function App() {
       if (!res.ok) throw new Error('API failed');
       const data = await res.json();
 
-      setRoadmap({
+      const newRoadmap: PersonalizedRoadmap = {
         source: data.source || 'gemini',
         lastUpdated: 'Just now',
         overview: data.overview || INITIAL_ROADMAP.overview,
@@ -292,18 +310,37 @@ export default function App() {
           recommendedTools: p.recommendedTools || ['Curated Pattern Drills'],
           completionScoreTarget: p.completionScoreTarget || '+40 pts',
         })),
-      });
+      };
+
+      await saveRoadmapToFirestore(currentUser.uid, newRoadmap);
     } catch (e) {
       console.warn('AI roadmap generation fallback active:', e);
     }
   };
 
-  const handleSwitchPersona = (key: string) => {
-    const selected = SAMPLE_PERSONAS[key];
-    if (selected) {
-      setProfile(selected);
+  const handleSignOut = async () => {
+    try {
+      await logOut();
+      setCurrentUser(null);
+    } catch (err) {
+      console.error('Sign out error:', err);
     }
   };
+
+  // Auth Loading View
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
+        <p className="text-xs text-slate-400 font-medium">Verifying Google Learner Session...</p>
+      </div>
+    );
+  }
+
+  // Google Authentication Gate: Strictly Google Sign-In for learners
+  if (!currentUser) {
+    return <GoogleAuthScreen onSignedIn={() => {}} />;
+  }
 
   // Content switcher
   const renderCurrentView = () => {
@@ -364,8 +401,8 @@ export default function App() {
         return (
           <ProfileView
             profile={profile}
-            onUpdateProfile={setProfile}
-            onSwitchPersona={handleSwitchPersona}
+            onUpdateProfile={handleUpdateProfile}
+            onSignOut={handleSignOut}
           />
         );
       default:

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   GraduationCap,
@@ -9,33 +9,39 @@ import {
   Sparkles,
   Save,
   CheckCircle2,
-  Users,
   Download,
-  Upload,
   Plus,
   X,
+  LogOut,
+  ShieldCheck,
+  CloudCheck,
 } from 'lucide-react';
 import {
   StudentProfile,
   RoleType,
   CompanyTier,
 } from '../types';
-import { SAMPLE_PERSONAS } from '../data/initialData';
 
 interface ProfileViewProps {
   profile: StudentProfile;
   onUpdateProfile: (updated: StudentProfile) => void;
-  onSwitchPersona: (personaKey: string) => void;
+  onSignOut?: () => void;
+  isSaving?: boolean;
 }
 
 export function ProfileView({
   profile,
   onUpdateProfile,
-  onSwitchPersona,
+  onSignOut,
+  isSaving = false,
 }: ProfileViewProps) {
   const [formData, setFormData] = useState<StudentProfile>(profile);
   const [newSkillInput, setNewSkillInput] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    setFormData(profile);
+  }, [profile]);
 
   const roleOptions: RoleType[] = [
     'Software Development Engineer',
@@ -105,45 +111,36 @@ export function ProfileView({
     downloadAnchor.remove();
   };
 
-  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target?.result as string);
-          if (parsed.fullName) {
-            setFormData(parsed);
-            onUpdateProfile(parsed);
-            setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 2500);
-          }
-        } catch (err) {
-          alert('Invalid JSON profile file format.');
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
   return (
     <div className="space-y-4 pb-20 max-w-lg mx-auto">
       {/* Profile Header & Completion Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-base shadow-sm">
-              {formData.fullName.charAt(0) || 'S'}
-            </div>
+            {formData.photoURL ? (
+              <img
+                src={formData.photoURL}
+                alt={formData.fullName}
+                className="w-11 h-11 rounded-full object-cover border border-indigo-500/30"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                {formData.fullName.charAt(0) || 'L'}
+              </div>
+            )}
             <div>
-              <h2 className="text-sm font-bold text-slate-100">{formData.fullName}</h2>
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-sm font-bold text-slate-100">{formData.fullName}</h2>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              </div>
               <p className="text-xs text-slate-400">
-                {formData.degree} • {formData.college}
+                {formData.email}
               </p>
             </div>
           </div>
           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            {completionPct}% Complete
+            {completionPct}% Profile
           </span>
         </div>
 
@@ -158,40 +155,35 @@ export function ProfileView({
           <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>
-              {completionPct >= 90
-                ? 'Profile is fully optimized for campus placement drives!'
-                : 'Complete all links & skills to earn +20 Placement Readiness Points.'}
+              {completionPct >= 80
+                ? 'Profile verified and optimized for campus placement drives!'
+                : 'Fill in your academic and target company details to earn readiness score points.'}
             </span>
           </p>
         </div>
       </div>
 
-      {/* Preset Personas Selector */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-2">
-        <div className="flex items-center gap-1.5 text-slate-300 text-xs font-semibold">
-          <Users className="w-4 h-4 text-indigo-400" />
-          <span>Quick Switch Student Persona</span>
+      {/* Google Learner Account & Cloud Sync Status */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <CloudCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-slate-200">Google Verified Learner</div>
+            <div className="text-[10px] text-slate-400">Firestore Cloud Sync • Live DB</div>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {Object.entries(SAMPLE_PERSONAS).map(([key, persona]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => {
-                setFormData(persona);
-                onSwitchPersona(key);
-              }}
-              className={`p-2 rounded-xl text-left border text-xs transition-all ${
-                formData.fullName === persona.fullName
-                  ? 'bg-indigo-600/20 border-indigo-500 text-indigo-200'
-                  : 'bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-800'
-              }`}
-            >
-              <div className="font-semibold text-slate-200 truncate">{persona.fullName.split(' ')[0]}</div>
-              <div className="text-[10px] text-slate-400 truncate">{persona.targetRole.split(' ')[0]}</div>
-            </button>
-          ))}
-        </div>
+        {onSignOut && (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-3 py-1.5 rounded-xl transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        )}
       </div>
 
       {/* Edit Form */}
@@ -423,22 +415,14 @@ export function ProfileView({
             )}
           </button>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleExportJson}
-              className="flex-1 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <Download className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Export Profile Backup</span>
-            </button>
-
-            <label className="flex-1 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-center">
-              <Upload className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Import JSON</span>
-              <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
-            </label>
-          </div>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="w-full py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Export Profile Backup (JSON)</span>
+          </button>
         </div>
       </form>
     </div>

@@ -30,6 +30,7 @@ export interface StudentProfile {
   skills: string[];
   streakDays: number;
   avatarSeed: string;
+  photoURL?: string;
 }
 
 export type AptitudeCategory = 'quantitative' | 'logical' | 'verbal';
@@ -94,6 +95,7 @@ export interface TestCaseResult {
 }
 
 export interface CodingSubmission {
+  id?: string;
   problemId: string;
   language: string;
   code: string;

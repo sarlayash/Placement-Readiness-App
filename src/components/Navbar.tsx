@@ -78,10 +78,19 @@ export function Navbar({
           <button
             id="profile-avatar-btn"
             onClick={onOpenProfile}
-            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white font-semibold text-xs border border-white/20 shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all focus:outline-none"
+            className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white font-semibold text-xs border border-white/20 shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all focus:outline-none overflow-hidden"
             aria-label="Open profile settings"
           >
-            {profile.fullName.charAt(0)}
+            {profile.photoURL ? (
+              <img
+                src={profile.photoURL}
+                alt={profile.fullName}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              profile.fullName.charAt(0) || 'L'
+            )}
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-900" />
           </button>
         </div>
