@@ -47,7 +47,17 @@ export type AssessmentCategory =
   | 'generative_ai'
   | 'agentic_ai'
   | 'quantitative'
-  | 'logical';
+  | 'logical'
+  | 'windows_endpoint'
+  | 'linux_automation'
+  | 'cloud_platform'
+  | 'network_engineering'
+  | 'cybersecurity_iam'
+  | 'database_platforms'
+  | 'observability_aiops'
+  | 'servicenow_automation'
+  | 'ai_architecture'
+  | 'service_delivery_ops';
 
 export type AptitudeCategory = AssessmentCategory;
 

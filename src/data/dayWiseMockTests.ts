@@ -1,4 +1,5 @@
 import { AptitudeQuestion, AssessmentCategory } from '../types';
+import { SPECIALIZED_ENGINEERING_TRACKS } from './specializedEngineeringAssessments';
 
 export interface DayDomainMockTest {
   category: AssessmentCategory;
@@ -1756,11 +1757,26 @@ export const ALL_DAY_3_QUESTIONS: AptitudeQuestion[] = DAY_3_MOCK_TEST_PACK.doma
   (d) => d.questions
 );
 
-// Extensible Day Registry: Day 1, Day 2 & Day 3 active with all 14 Domains
+export const DAY_4_MOCK_TEST_PACK: DayMockTestPack = {
+  dayNumber: 4,
+  title: 'Day 4: Specialized Systems, Cloud & AI Engineering Tracks',
+  tagline: '10 Advanced Engineering Tracks • 10 MCQs each • 100 System-Level Problems',
+  description: 'Production infrastructure & architectural assessment suite covering Windows Endpoint, Linux Automation, Multi-Cloud K8s, BGP Networking, Zero Trust IAM, Distributed Databases, AIOps Observability, ServiceNow Workflow, AI Solution Architecture, and Service Delivery.',
+  status: 'active',
+  totalQuestions: 100,
+  domains: SPECIALIZED_ENGINEERING_TRACKS,
+};
+
+export const ALL_DAY_4_QUESTIONS: AptitudeQuestion[] = DAY_4_MOCK_TEST_PACK.domains.flatMap(
+  (d) => d.questions
+);
+
+// Extensible Day Registry: Day 1, Day 2, Day 3 & Day 4 active
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
   DAY_2_MOCK_TEST_PACK,
   DAY_3_MOCK_TEST_PACK,
+  DAY_4_MOCK_TEST_PACK,
 ];
 
 // Helper to flatten all Day 1 questions into a combined question bank

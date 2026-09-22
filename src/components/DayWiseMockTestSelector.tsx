@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Calendar,
   Clock,
@@ -24,6 +24,18 @@ import {
   Sparkle,
   Copy,
   Check,
+  Search,
+  Laptop,
+  Terminal,
+  Cloud,
+  Network,
+  Shield,
+  HardDrive,
+  Activity,
+  Workflow,
+  Cpu,
+  Briefcase,
+  X,
 } from 'lucide-react';
 import { AptitudeQuestion, AssessmentCategory } from '../types';
 import {
@@ -40,13 +52,17 @@ interface DayWiseMockTestSelectorProps {
   completedTestsHistory?: Record<string, { score: number; total: number; percentage: number }>;
 }
 
+type TrackFilterCluster = 'all' | 'specialized' | 'cloud_infra' | 'cyber_data' | 'ai_automation' | 'aptitude_soft';
+
 export function DayWiseMockTestSelector({
   onStartDomainTest,
   onStartFullDayTest,
   onStartDiagnosticTest,
   completedTestsHistory = {},
 }: DayWiseMockTestSelectorProps) {
-  const [activeDay, setActiveDay] = useState<number>(1);
+  const [activeDay, setActiveDay] = useState<number>(4); // Default to Day 4 for instant discovery of the 10 new domains
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [trackCluster, setTrackCluster] = useState<TrackFilterCluster>('all');
   const [showAddDayModal, setShowAddDayModal] = useState<boolean>(false);
   const [copiedTemplate, setCopiedTemplate] = useState<boolean>(false);
   const [customDayInput, setCustomDayInput] = useState<string>('');
@@ -56,6 +72,29 @@ export function DayWiseMockTestSelector({
 
   const getDomainIcon = (category: AssessmentCategory) => {
     switch (category) {
+      // 10 Specialized Engineering Domains
+      case 'windows_endpoint':
+        return Laptop;
+      case 'linux_automation':
+        return Terminal;
+      case 'cloud_platform':
+        return Cloud;
+      case 'network_engineering':
+        return Network;
+      case 'cybersecurity_iam':
+        return Shield;
+      case 'database_platforms':
+        return HardDrive;
+      case 'observability_aiops':
+        return Activity;
+      case 'servicenow_automation':
+        return Workflow;
+      case 'ai_architecture':
+        return Cpu;
+      case 'service_delivery_ops':
+        return Briefcase;
+
+      // Existing Placement & Soft Skills
       case 'verbal':
         return MessageSquare;
       case 'soft_skills':
@@ -89,21 +128,68 @@ export function DayWiseMockTestSelector({
     }
   };
 
-  const dayJsonTemplate = `// Template to add Day ${activeDay + 1} or custom questions
+  // Specialized categories set for filtering
+  const specializedCategories: AssessmentCategory[] = [
+    'windows_endpoint',
+    'linux_automation',
+    'cloud_platform',
+    'network_engineering',
+    'cybersecurity_iam',
+    'database_platforms',
+    'observability_aiops',
+    'servicenow_automation',
+    'ai_architecture',
+    'service_delivery_ops',
+  ];
+
+  // Filter domains based on active cluster & search query
+  const filteredDomains = useMemo(() => {
+    return currentPack.domains.filter((domain) => {
+      // Filter by cluster
+      if (trackCluster === 'specialized') {
+        if (!specializedCategories.includes(domain.category)) return false;
+      } else if (trackCluster === 'cloud_infra') {
+        const cloudInfra: AssessmentCategory[] = ['cloud_platform', 'linux_automation', 'windows_endpoint', 'network_engineering'];
+        if (!cloudInfra.includes(domain.category)) return false;
+      } else if (trackCluster === 'cyber_data') {
+        const cyberData: AssessmentCategory[] = ['cybersecurity_iam', 'database_platforms', 'observability_aiops', 'sql'];
+        if (!cyberData.includes(domain.category)) return false;
+      } else if (trackCluster === 'ai_automation') {
+        const aiAuto: AssessmentCategory[] = ['ai_architecture', 'servicenow_automation', 'service_delivery_ops', 'generative_ai', 'agentic_ai', 'ai'];
+        if (!aiAuto.includes(domain.category)) return false;
+      } else if (trackCluster === 'aptitude_soft') {
+        const aptSoft: AssessmentCategory[] = ['verbal', 'quantitative', 'logical', 'soft_skills', 'professional_writing', 'business_communication', 'emotional_intelligence'];
+        if (!aptSoft.includes(domain.category)) return false;
+      }
+
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesName = domain.domainName.toLowerCase().includes(q);
+        const matchesTagline = domain.tagline.toLowerCase().includes(q);
+        const matchesRoles = domain.targetRoles.some((r) => r.toLowerCase().includes(q));
+        return matchesName || matchesTagline || matchesRoles;
+      }
+
+      return true;
+    });
+  }, [currentPack, trackCluster, searchQuery]);
+
+  const dayJsonTemplate = `// Template to add Day ${ALL_DAY_MOCK_TESTS.length + 1} or custom questions
 {
-  "dayNumber": ${activeDay + 1},
-  "title": "Day ${activeDay + 1}: Advanced Placement Mock",
-  "tagline": "14 Domains • 10 MCQs each",
+  "dayNumber": ${ALL_DAY_MOCK_TESTS.length + 1},
+  "title": "Day ${ALL_DAY_MOCK_TESTS.length + 1}: Advanced Placement Mock",
+  "tagline": "10 Domains • 10 MCQs each",
   "status": "active",
   "domains": [
     {
-      "category": "verbal",
-      "domainName": "Verbal Ability",
+      "category": "cloud_platform",
+      "domainName": "Cloud & Platform Engineering",
       "questions": [
         {
-          "id": "d${activeDay + 1}_vb_01",
-          "category": "verbal",
-          "topic": "Sentence Correction",
+          "id": "d${ALL_DAY_MOCK_TESTS.length + 1}_cp_01",
+          "category": "cloud_platform",
+          "topic": "Kubernetes Ingress & Multi-Cloud",
           "question": "Your question here...",
           "options": ["Opt A", "Opt B", "Opt C", "Opt D"],
           "correctIndex": 0,
@@ -124,7 +210,7 @@ export function DayWiseMockTestSelector({
   const handleApplyCustomDay = () => {
     if (!customDayInput.trim()) return;
     try {
-      setCustomAddSuccess(`Day ${activeDay + 1} configuration validated successfully! You can add new daily sets anytime.`);
+      setCustomAddSuccess(`Day configuration validated successfully! New daily sets can be added anytime.`);
       setTimeout(() => {
         setCustomAddSuccess(null);
         setShowAddDayModal(false);
@@ -150,8 +236,8 @@ export function DayWiseMockTestSelector({
       </div>
 
       {/* Day Selector Pills Bar */}
-      <div className="bg-black border border-neutral-800 p-2 rounded-2xl shadow-lg">
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-900 px-1">
+      <div className="bg-black border border-neutral-800 p-2.5 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-neutral-900 px-1">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-amber-400" />
             <span className="text-xs font-black uppercase tracking-wider text-white">
@@ -159,38 +245,59 @@ export function DayWiseMockTestSelector({
             </span>
           </div>
           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-            10 MCQs / Domain
+            {ALL_DAY_MOCK_TESTS.length} Active Curricula
           </span>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {ALL_DAY_MOCK_TESTS.map((pack) => {
             const isSelected = activeDay === pack.dayNumber;
-            const isActivePack = pack.status === 'active';
+            const isDay4Specialized = pack.dayNumber === 4;
             return (
               <button
                 key={pack.dayNumber}
                 id={`day-selector-btn-${pack.dayNumber}`}
-                onClick={() => setActiveDay(pack.dayNumber)}
+                onClick={() => {
+                  setActiveDay(pack.dayNumber);
+                  setSearchQuery('');
+                }}
                 className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
                   isSelected
-                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20 ring-1 ring-amber-300'
-                    : isActivePack
-                    ? 'bg-neutral-900 text-neutral-300 border border-neutral-800 hover:text-white hover:border-neutral-700'
-                    : 'bg-neutral-950 text-neutral-500 border border-neutral-900 hover:text-neutral-400'
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/25 ring-2 ring-amber-300'
+                    : isDay4Specialized
+                    ? 'bg-neutral-900 text-amber-300 border border-amber-500/40 hover:border-amber-400'
+                    : 'bg-neutral-900 text-neutral-300 border border-neutral-800 hover:text-white hover:border-neutral-700'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-black' : isActivePack ? 'bg-emerald-400' : 'bg-neutral-600'}`} />
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    isSelected
+                      ? 'bg-black'
+                      : isDay4Specialized
+                      ? 'bg-amber-400 animate-pulse'
+                      : 'bg-emerald-400'
+                  }`}
+                />
                 <span>Day {pack.dayNumber}</span>
-                {isActivePack ? (
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
-                    isSelected ? 'bg-black text-amber-300' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  }`}>
-                    Live
+                {isDay4Specialized ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                      isSelected
+                        ? 'bg-black text-amber-300'
+                        : 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
+                    }`}
+                  >
+                    10 New Tracks 🔥
                   </span>
                 ) : (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase bg-neutral-800 text-neutral-400">
-                    Next
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
+                      isSelected
+                        ? 'bg-black text-amber-300'
+                        : 'bg-neutral-800 text-neutral-400'
+                    }`}
+                  >
+                    Live
                   </span>
                 )}
               </button>
@@ -211,22 +318,27 @@ export function DayWiseMockTestSelector({
 
       {/* Active Day Banner */}
       <div className="bg-gradient-to-br from-neutral-950 via-black to-neutral-950 border-2 border-amber-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-44 h-44 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex items-start justify-between relative z-10 gap-3">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider">
                 Day {currentPack.dayNumber} Curriculum
               </span>
+              {activeDay === 4 && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider">
+                  Windows • Linux • Cloud • Cyber • IAM • AIOps
+                </span>
+              )}
               <span className="text-[11px] text-neutral-400 font-medium">
-                {completedCount} of {currentPack.domains.length} Domains Done
+                {completedCount} of {currentPack.domains.length} Tracks Completed
               </span>
             </div>
             <h2 className="text-base font-black text-white tracking-wide">
               {currentPack.title}
             </h2>
-            <p className="text-xs text-neutral-400 leading-relaxed">
+            <p className="text-xs text-neutral-400 leading-relaxed max-w-lg">
               {currentPack.description}
             </p>
           </div>
@@ -241,7 +353,7 @@ export function DayWiseMockTestSelector({
           </div>
         </div>
 
-        {/* Day 1 Quick Actions Bar */}
+        {/* Day Quick Actions Bar */}
         <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-neutral-900 relative z-10">
           <button
             id="start-full-day-marathon-btn"
@@ -249,7 +361,7 @@ export function DayWiseMockTestSelector({
             className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer active:scale-95"
           >
             <Flame className="w-3.5 h-3.5 fill-black" />
-            <span>Full Day {currentPack.dayNumber} Test ({currentPack.totalQuestions} Qs)</span>
+            <span>Full Marathon ({currentPack.totalQuestions} Qs)</span>
           </button>
 
           <button
@@ -258,106 +370,181 @@ export function DayWiseMockTestSelector({
             className="py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Quick Diagnostic ({currentPack.domains.length} MCQs)</span>
+            <span>Diagnostic ({currentPack.domains.length} MCQs)</span>
           </button>
         </div>
       </div>
 
-      {/* Day-Wise 5 Placement & Interview Tips (Day 1, Day 2, Day 3 & Daily Extensible) */}
+      {/* Day-Wise 5 Placement & Interview Tips (Day 1, Day 2, Day 3 & Extensible) */}
       <DayWiseInterviewTipsCard
-        currentDay={activeDay}
+        currentDay={Math.min(3, activeDay)}
         onSelectDay={(day) => setActiveDay(day)}
       />
+
+      {/* Search & Domain Filter Toolbar */}
+      <div className="space-y-2 bg-neutral-950 p-3 rounded-2xl border border-neutral-800">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              id="domain-search-input"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search domains (e.g. Cloud, Linux, IAM, ServiceNow, Prometheus, SQL)..."
+              className="w-full bg-black border border-neutral-800 focus:border-amber-500/60 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-neutral-500 outline-none transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Track Category Clusters */}
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+          {[
+            { id: 'all', label: `All Tracks (${currentPack.domains.length})` },
+            { id: 'specialized', label: '🔥 10 Specialized Tracks' },
+            { id: 'cloud_infra', label: 'Cloud & Infrastructure' },
+            { id: 'cyber_data', label: 'Cybersecurity & Data' },
+            { id: 'ai_automation', label: 'AI & Automations' },
+            { id: 'aptitude_soft', label: 'Aptitude & Soft Skills' },
+          ].map((cluster) => {
+            const isSelected = trackCluster === cluster.id;
+            return (
+              <button
+                key={cluster.id}
+                onClick={() => setTrackCluster(cluster.id as TrackFilterCluster)}
+                className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-amber-500 text-black shadow-sm font-black'
+                    : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-850'
+                }`}
+              >
+                {cluster.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* All Domains Grid: Each with 10 MCQs Placement Mock */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-            All {currentPack.domains.length} Domain Mock Tests (10 MCQs Each)
+            {filteredDomains.length} Tracks Available (10 MCQs Each)
           </span>
           <span className="text-[10px] text-neutral-400">
-            Timed • 12 Mins • Placement Questions
+            Timed • 12 Mins • Placement Calibrated
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5">
-          {currentPack.domains.map((domain, index) => {
-            const Icon = getDomainIcon(domain.category);
-            const historyKey = `day_${activeDay}_${domain.category}`;
-            const completedRecord = completedTestsHistory[historyKey];
+        {filteredDomains.length === 0 ? (
+          <div className="p-8 text-center bg-black border border-neutral-800 rounded-2xl space-y-2">
+            <p className="text-xs text-neutral-400 font-medium">
+              No domains matched "{searchQuery}" under this filter.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setTrackCluster('all');
+              }}
+              className="text-xs text-amber-400 font-bold hover:underline"
+            >
+              Clear filters and view all tracks
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-2.5">
+            {filteredDomains.map((domain, index) => {
+              const Icon = getDomainIcon(domain.category);
+              const historyKey = `day_${activeDay}_${domain.category}`;
+              const completedRecord = completedTestsHistory[historyKey];
+              const isSpecialized = specializedCategories.includes(domain.category);
 
-            return (
-              <div
-                key={domain.category}
-                className="bg-black border border-neutral-800 hover:border-amber-500/40 rounded-2xl p-3.5 shadow-md transition-all hover:bg-neutral-950/60 flex items-center justify-between gap-3 group"
-              >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  {/* Domain Medallion / Icon */}
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border shadow-inner"
-                    style={{
-                      backgroundColor: `${domain.badgeColor}15`,
-                      borderColor: `${domain.badgeColor}40`,
-                      color: domain.badgeColor,
-                    }}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-black text-white group-hover:text-amber-300 transition-colors">
-                        {index + 1}. {domain.domainName}
-                      </span>
-                      <span
-                        className="text-[9px] font-black px-1.5 py-0.2 rounded uppercase border"
-                        style={{
-                          backgroundColor: `${domain.badgeColor}15`,
-                          borderColor: `${domain.badgeColor}40`,
-                          color: domain.badgeColor,
-                        }}
-                      >
-                        10 MCQs
-                      </span>
-                      {completedRecord && (
-                        <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-                          <CheckCircle2 className="w-2.5 h-2.5" />
-                          <span>Score: {completedRecord.percentage}%</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
-                      {domain.tagline}
-                    </p>
-
-                    <div className="flex items-center gap-3 mt-1.5 text-[10px] text-neutral-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-neutral-400" />
-                        <span>12 Mins</span>
-                      </span>
-                      <span>•</span>
-                      <span className="truncate">
-                        {domain.targetRoles[0]}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Launch Button */}
-                <button
-                  id={`launch-domain-${domain.category}-day-${activeDay}`}
-                  onClick={() => onStartDomainTest(activeDay, domain)}
-                  className="px-3.5 py-2.5 rounded-xl bg-neutral-900 hover:bg-gradient-to-r hover:from-amber-500 hover:to-amber-400 hover:text-black text-amber-300 border border-amber-500/30 hover:border-transparent text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm shrink-0 cursor-pointer group-hover:shadow-amber-500/20 active:scale-95"
+              return (
+                <div
+                  key={domain.category}
+                  className="bg-black border border-neutral-800 hover:border-amber-500/50 rounded-2xl p-3.5 shadow-md transition-all hover:bg-neutral-950/70 flex items-center justify-between gap-3 group"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span className="hidden sm:inline">Start</span>
-                  <span>10 Qs</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Domain Medallion / Icon */}
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border shadow-inner transition-transform group-hover:scale-105"
+                      style={{
+                        backgroundColor: `${domain.badgeColor}15`,
+                        borderColor: `${domain.badgeColor}40`,
+                        color: domain.badgeColor,
+                      }}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-black text-white group-hover:text-amber-300 transition-colors">
+                          {index + 1}. {domain.domainName}
+                        </span>
+                        {isSpecialized && (
+                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                            New Track
+                          </span>
+                        )}
+                        <span
+                          className="text-[9px] font-black px-1.5 py-0.2 rounded uppercase border"
+                          style={{
+                            backgroundColor: `${domain.badgeColor}15`,
+                            borderColor: `${domain.badgeColor}40`,
+                            color: domain.badgeColor,
+                          }}
+                        >
+                          10 MCQs
+                        </span>
+                        {completedRecord && (
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            <span>Score: {completedRecord.percentage}%</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
+                        {domain.tagline}
+                      </p>
+
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-neutral-500">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-neutral-400" />
+                          <span>12 Mins</span>
+                        </span>
+                        <span>•</span>
+                        <span className="truncate max-w-[200px] text-neutral-400">
+                          {domain.targetRoles[0]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Launch Button */}
+                  <button
+                    id={`launch-domain-${domain.category}-day-${activeDay}`}
+                    onClick={() => onStartDomainTest(activeDay, domain)}
+                    className="px-3.5 py-2.5 rounded-xl bg-neutral-900 hover:bg-gradient-to-r hover:from-amber-500 hover:to-amber-400 hover:text-black text-amber-300 border border-amber-500/30 hover:border-transparent text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm shrink-0 cursor-pointer group-hover:shadow-amber-500/20 active:scale-95"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span className="hidden sm:inline">Start</span>
+                    <span>10 Qs</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add / Schedule Daily Mock Tests Modal */}
@@ -368,7 +555,7 @@ export function DayWiseMockTestSelector({
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-amber-400" />
                 <h3 className="text-sm font-black text-amber-300 uppercase tracking-wide">
-                  Schedule Daily Mock Tests (Day 2, Day 3...)
+                  Schedule Daily Mock Tests (Day {ALL_DAY_MOCK_TESTS.length + 1}...)
                 </h3>
               </div>
               <button
@@ -380,51 +567,57 @@ export function DayWiseMockTestSelector({
             </div>
 
             <p className="text-xs text-neutral-300 leading-relaxed">
-              You can expand the daily mock test schedule by adding new question packs day-by-day. Day 1 is fully active with 110 MCQs (10 MCQs across all 11 domains).
+              Every day includes up to 14 standard or specialized engineering domains with 10 questions each. Paste your JSON curriculum below or copy the standard schema template.
             </p>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-neutral-400 uppercase">
-                  Daily Question JSON Schema
-                </span>
-                <button
-                  onClick={handleCopyTemplate}
-                  className="flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-amber-200"
-                >
-                  {copiedTemplate ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedTemplate ? 'Copied Template!' : 'Copy Schema Template'}</span>
-                </button>
-              </div>
-
-              <textarea
-                value={customDayInput}
-                onChange={(e) => setCustomDayInput(e.target.value)}
-                placeholder={dayJsonTemplate}
-                rows={7}
-                className="w-full bg-black border border-neutral-800 rounded-xl p-3 font-mono text-[10px] text-neutral-300 focus:outline-none focus:border-amber-400 resize-none"
-              />
+            <div className="flex items-center justify-between bg-neutral-900 px-3 py-2 rounded-xl border border-neutral-800">
+              <span className="text-[11px] text-neutral-400 font-mono">
+                day_pack_schema_v2.json
+              </span>
+              <button
+                onClick={handleCopyTemplate}
+                className="flex items-center gap-1 text-[11px] text-amber-300 font-bold hover:underline"
+              >
+                {copiedTemplate ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Schema</span>
+                  </>
+                )}
+              </button>
             </div>
 
+            <textarea
+              value={customDayInput}
+              onChange={(e) => setCustomDayInput(e.target.value)}
+              placeholder={`Paste your JSON config for Day ${ALL_DAY_MOCK_TESTS.length + 1} here...`}
+              rows={6}
+              className="w-full bg-black border border-neutral-800 rounded-xl p-3 text-xs text-amber-200 font-mono focus:border-amber-500 outline-none resize-none"
+            />
+
             {customAddSuccess && (
-              <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>{customAddSuccess}</span>
+              <div className="text-xs text-emerald-400 font-bold p-2 bg-emerald-950/40 border border-emerald-500/30 rounded-lg">
+                {customAddSuccess}
               </div>
             )}
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowAddDayModal(false)}
-                className="flex-1 py-2.5 rounded-xl bg-neutral-900 text-neutral-300 hover:bg-neutral-800 text-xs font-bold transition-all"
+                className="flex-1 py-2.5 rounded-xl bg-neutral-900 text-neutral-300 text-xs font-bold hover:bg-neutral-800"
               >
-                Close
+                Cancel
               </button>
               <button
                 onClick={handleApplyCustomDay}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black text-xs font-black uppercase tracking-wider hover:from-amber-400 hover:to-amber-300 transition-all shadow-md shadow-amber-500/20"
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 text-black text-xs font-black uppercase hover:bg-amber-400"
               >
-                Save Day Questions
+                Save Schedule
               </button>
             </div>
           </div>

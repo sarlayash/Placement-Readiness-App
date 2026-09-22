@@ -27,6 +27,18 @@ import {
   Layers,
   BookOpen,
   Copy,
+  Laptop,
+  Terminal,
+  Cloud,
+  Network,
+  Shield,
+  HardDrive,
+  Activity,
+  Workflow,
+  Cpu,
+  Briefcase,
+  Search,
+  X,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -64,6 +76,8 @@ export function AssessmentsView({
   const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding' | 'tips'>(defaultSubTab);
   const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules'>('day_wise');
   const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
+  const [moduleSearch, setModuleSearch] = useState<string>('');
+  const [moduleClusterFilter, setModuleClusterFilter] = useState<'all' | 'specialized' | 'cloud' | 'cyber_data' | 'ai' | 'aptitude'>('all');
 
   // Day-wise custom test state
   const [customTestPool, setCustomTestPool] = useState<AptitudeQuestion[] | null>(null);
@@ -256,8 +270,16 @@ export function AssessmentsView({
     setIsTestActive(true);
   };
 
+  const getCurrentTestPool = () => {
+    return customTestPool && customTestPool.length > 0
+      ? customTestPool
+      : activeQuestions.length > 0
+      ? activeQuestions
+      : questions;
+  };
+
   const handleRewardSelected = (reward: WheelReward) => {
-    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const pool = getCurrentTestPool();
     const currentQ = pool[currentQuestionIndex];
     if (!currentQ) return;
     setWheelReward(reward);
@@ -274,14 +296,14 @@ export function AssessmentsView({
   };
 
   const handleSelectAnswer = (optionIndex: number) => {
-    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const pool = getCurrentTestPool();
     const currentQ = pool[currentQuestionIndex];
     if (!currentQ) return;
     setSelectedAnswers((prev) => ({ ...prev, [currentQ.id]: optionIndex }));
   };
 
   const handleToggleMarkReview = () => {
-    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const pool = getCurrentTestPool();
     const currentQ = pool[currentQuestionIndex];
     if (!currentQ) return;
     setMarkedForReview((prev) => ({ ...prev, [currentQ.id]: !prev[currentQ.id] }));
@@ -291,7 +313,7 @@ export function AssessmentsView({
     if (timerRef.current) clearInterval(timerRef.current);
     setIsTestActive(false);
 
-    const pool = activeQuestions.length > 0 ? activeQuestions : questions;
+    const pool = getCurrentTestPool();
     let correctCount = 0;
     const catScores: Record<string, { correct: number; total: number }> = {};
 
@@ -469,25 +491,47 @@ export function AssessmentsView({
   };
 
   // Assessment Modules List
-  const modulesList: { id: ModuleFilter; label: string; icon: any; count: number }[] = [
-    { id: 'all', label: 'All Modules', icon: Sparkles, count: questions.length },
-    { id: 'verbal', label: 'Verbal Ability', icon: MessageSquare, count: questions.filter(q => q.category === 'verbal').length },
-    { id: 'soft_skills', label: 'Soft Skills', icon: Award, count: questions.filter(q => q.category === 'soft_skills').length },
-    { id: 'professional_writing', label: 'Professional Writing', icon: BookOpen, count: questions.filter(q => q.category === 'professional_writing').length },
-    { id: 'business_communication', label: 'Business Communication', icon: MessageSquare, count: questions.filter(q => q.category === 'business_communication').length },
-    { id: 'emotional_intelligence', label: 'Emotional Intelligence (EQ)', icon: Award, count: questions.filter(q => q.category === 'emotional_intelligence').length },
-    { id: 'coding', label: 'Coding MCQs', icon: Code2, count: questions.filter(q => q.category === 'coding').length },
-    { id: 'excel', label: 'Excel Modeling', icon: FileSpreadsheet, count: questions.filter(q => q.category === 'excel').length },
-    { id: 'sql', label: 'SQL Queries', icon: Database, count: questions.filter(q => q.category === 'sql').length },
-    { id: 'power_bi', label: 'Power BI & DAX', icon: BarChart3, count: questions.filter(q => q.category === 'power_bi').length },
-    { id: 'ai', label: 'AI & ML Foundational', icon: Bot, count: questions.filter(q => q.category === 'ai').length },
-    { id: 'generative_ai', label: 'Generative AI', icon: Sparkle, count: questions.filter(q => q.category === 'generative_ai').length },
-    { id: 'agentic_ai', label: 'Agentic AI', icon: BrainCircuit, count: questions.filter(q => q.category === 'agentic_ai').length },
-    { id: 'quantitative', label: 'Quantitative Aptitude', icon: BrainCircuit, count: questions.filter(q => q.category === 'quantitative').length },
-    { id: 'logical', label: 'Logical Reasoning', icon: BrainCircuit, count: questions.filter(q => q.category === 'logical').length },
+  const modulesList: {
+    id: ModuleFilter;
+    label: string;
+    icon: any;
+    count: number;
+    cluster: 'all' | 'specialized' | 'cloud' | 'cyber_data' | 'ai' | 'aptitude';
+  }[] = [
+    { id: 'all', label: 'All Modules', icon: Sparkles, count: questions.length, cluster: 'all' },
+
+    // 10 Specialized Engineering Tracks
+    { id: 'windows_endpoint', label: 'Windows & Endpoint', icon: Laptop, count: questions.filter(q => q.category === 'windows_endpoint').length, cluster: 'specialized' },
+    { id: 'linux_automation', label: 'Linux & Automation', icon: Terminal, count: questions.filter(q => q.category === 'linux_automation').length, cluster: 'specialized' },
+    { id: 'cloud_platform', label: 'Cloud & Platform', icon: Cloud, count: questions.filter(q => q.category === 'cloud_platform').length, cluster: 'specialized' },
+    { id: 'network_engineering', label: 'Network Engineering', icon: Network, count: questions.filter(q => q.category === 'network_engineering').length, cluster: 'specialized' },
+    { id: 'cybersecurity_iam', label: 'Cybersecurity & IAM', icon: Shield, count: questions.filter(q => q.category === 'cybersecurity_iam').length, cluster: 'specialized' },
+    { id: 'database_platforms', label: 'Database & Data Platforms', icon: HardDrive, count: questions.filter(q => q.category === 'database_platforms').length, cluster: 'specialized' },
+    { id: 'observability_aiops', label: 'Observability & AIOps', icon: Activity, count: questions.filter(q => q.category === 'observability_aiops').length, cluster: 'specialized' },
+    { id: 'servicenow_automation', label: 'ServiceNow Workflows', icon: Workflow, count: questions.filter(q => q.category === 'servicenow_automation').length, cluster: 'specialized' },
+    { id: 'ai_architecture', label: 'AI Solution Architecture', icon: Cpu, count: questions.filter(q => q.category === 'ai_architecture').length, cluster: 'specialized' },
+    { id: 'service_delivery_ops', label: 'Service Delivery & Ops', icon: Briefcase, count: questions.filter(q => q.category === 'service_delivery_ops').length, cluster: 'specialized' },
+
+    // Core Aptitude & Placement
+    { id: 'verbal', label: 'Verbal Ability', icon: MessageSquare, count: questions.filter(q => q.category === 'verbal').length, cluster: 'aptitude' },
+    { id: 'quantitative', label: 'Quantitative Aptitude', icon: BrainCircuit, count: questions.filter(q => q.category === 'quantitative').length, cluster: 'aptitude' },
+    { id: 'logical', label: 'Logical Reasoning', icon: BrainCircuit, count: questions.filter(q => q.category === 'logical').length, cluster: 'aptitude' },
+    { id: 'soft_skills', label: 'Soft Skills', icon: Award, count: questions.filter(q => q.category === 'soft_skills').length, cluster: 'aptitude' },
+    { id: 'professional_writing', label: 'Professional Writing', icon: BookOpen, count: questions.filter(q => q.category === 'professional_writing').length, cluster: 'aptitude' },
+    { id: 'business_communication', label: 'Business Communication', icon: MessageSquare, count: questions.filter(q => q.category === 'business_communication').length, cluster: 'aptitude' },
+    { id: 'emotional_intelligence', label: 'Emotional Intelligence', icon: Award, count: questions.filter(q => q.category === 'emotional_intelligence').length, cluster: 'aptitude' },
+
+    // Software, Data & AI
+    { id: 'coding', label: 'Coding MCQs', icon: Code2, count: questions.filter(q => q.category === 'coding').length, cluster: 'cloud' },
+    { id: 'excel', label: 'Excel Modeling', icon: FileSpreadsheet, count: questions.filter(q => q.category === 'excel').length, cluster: 'cyber_data' },
+    { id: 'sql', label: 'SQL Queries', icon: Database, count: questions.filter(q => q.category === 'sql').length, cluster: 'cyber_data' },
+    { id: 'power_bi', label: 'Power BI & DAX', icon: BarChart3, count: questions.filter(q => q.category === 'power_bi').length, cluster: 'cyber_data' },
+    { id: 'ai', label: 'AI & ML Foundational', icon: Bot, count: questions.filter(q => q.category === 'ai').length, cluster: 'ai' },
+    { id: 'generative_ai', label: 'Generative AI', icon: Sparkle, count: questions.filter(q => q.category === 'generative_ai').length, cluster: 'ai' },
+    { id: 'agentic_ai', label: 'Agentic AI', icon: BrainCircuit, count: questions.filter(q => q.category === 'agentic_ai').length, cluster: 'ai' },
   ];
 
-  const pool = customTestPool && customTestPool.length > 0 ? customTestPool : (activeQuestions.length > 0 ? activeQuestions : questions);
+  const pool = getCurrentTestPool();
   const currentQ = pool[currentQuestionIndex] || pool[0];
 
   return (
@@ -580,41 +624,109 @@ export function AssessmentsView({
           {/* STANDARD MODULE PRACTICE VIEW */}
           {!isTestActive && !testResult && assessmentMode === 'modules' && (
             <>
-              {/* Module Selector Chips */}
-              <div className="space-y-2">
+              {/* Module Selector Toolbar & Clusters */}
+              <div className="space-y-2.5 bg-neutral-950 p-3 rounded-2xl border border-neutral-800">
                 <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
-                    Select Assessment Module
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+                      Practice Question Tracks ({modulesList.length - 1} Specializations)
+                    </span>
+                  </div>
                   <span className="text-[10px] text-neutral-400 font-medium">
-                    {modulesList.length} Tracks Available
+                    Instant Filter
                   </span>
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                  {modulesList.map((m) => {
-                    const Icon = m.icon;
-                    const isSelected = selectedModule === m.id;
+
+                {/* Instant Search Bar */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    id="module-search-input"
+                    type="text"
+                    value={moduleSearch}
+                    onChange={(e) => setModuleSearch(e.target.value)}
+                    placeholder="Search practice track (e.g. Linux, Cloud, Cyber, IAM, SQL, AIOps, ServiceNow)..."
+                    className="w-full bg-black border border-neutral-800 focus:border-amber-500/60 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-neutral-500 outline-none transition-all"
+                  />
+                  {moduleSearch && (
+                    <button
+                      onClick={() => setModuleSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Cluster Tabs */}
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+                  {[
+                    { id: 'all', label: 'All Tracks' },
+                    { id: 'specialized', label: '🔥 10 Specialized Systems' },
+                    { id: 'cloud', label: 'Platform & Coding' },
+                    { id: 'cyber_data', label: 'Cyber, DB & Data' },
+                    { id: 'ai', label: 'AI, GenAI & Agents' },
+                    { id: 'aptitude', label: 'Aptitude & Soft Skills' },
+                  ].map((cluster) => {
+                    const isSelected = moduleClusterFilter === cluster.id;
                     return (
                       <button
-                        key={m.id}
-                        onClick={() => {
-                          setSelectedModule(m.id);
-                          setCurrentQuestionIndex(0);
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold border transition-all shrink-0 cursor-pointer ${
+                        key={cluster.id}
+                        onClick={() => setModuleClusterFilter(cluster.id as any)}
+                        className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
-                            : 'bg-black border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
+                            ? 'bg-amber-500 text-black shadow-sm font-black'
+                            : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-850'
                         }`}
                       >
-                        <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-neutral-500'}`} />
-                        <span>{m.label}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${isSelected ? 'bg-amber-400 text-black' : 'bg-neutral-900 text-neutral-400'}`}>
-                          {m.count}
-                        </span>
+                        {cluster.label}
                       </button>
                     );
                   })}
+                </div>
+
+                {/* Module Selector Chips */}
+                <div className="flex gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none">
+                  {modulesList
+                    .filter((m) => {
+                      if (moduleClusterFilter !== 'all' && m.id !== 'all') {
+                        if (m.cluster !== moduleClusterFilter) return false;
+                      }
+                      if (moduleSearch.trim()) {
+                        const q = moduleSearch.toLowerCase();
+                        return m.label.toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+                      }
+                      return true;
+                    })
+                    .map((m) => {
+                      const Icon = m.icon;
+                      const isSelected = selectedModule === m.id;
+                      const isSpecialized = m.cluster === 'specialized';
+                      return (
+                        <button
+                          key={m.id}
+                          id={`module-chip-${m.id}`}
+                          onClick={() => {
+                            setSelectedModule(m.id);
+                            setCurrentQuestionIndex(0);
+                          }}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold border transition-all shrink-0 cursor-pointer ${
+                            isSelected
+                              ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
+                              : isSpecialized
+                              ? 'bg-neutral-900/90 border-amber-500/30 text-neutral-300 hover:text-white hover:border-amber-500/60'
+                              : 'bg-black border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
+                          }`}
+                        >
+                          <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : isSpecialized ? 'text-amber-400/80' : 'text-neutral-500'}`} />
+                          <span>{m.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${isSelected ? 'bg-amber-400 text-black' : 'bg-neutral-900 text-neutral-400'}`}>
+                            {m.count}
+                          </span>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
 
