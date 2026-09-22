@@ -31,6 +31,7 @@ import {
   DayDomainMockTest,
   ALL_DAY_MOCK_TESTS,
 } from '../data/dayWiseMockTests';
+import { DayWiseInterviewTipsCard } from './DayWiseInterviewTipsCard';
 
 interface DayWiseMockTestSelectorProps {
   onStartDomainTest: (dayNumber: number, domain: DayDomainMockTest) => void;
@@ -255,6 +256,12 @@ export function DayWiseMockTestSelector({
           </button>
         </div>
       </div>
+
+      {/* Day-Wise 5 Placement & Interview Tips (Day 1, Day 2, Day 3 & Daily Extensible) */}
+      <DayWiseInterviewTipsCard
+        currentDay={activeDay}
+        onSelectDay={(day) => setActiveDay(day)}
+      />
 
       {/* 11 Domains Grid: Each with 10 MCQs Placement Mock */}
       <div className="space-y-2">

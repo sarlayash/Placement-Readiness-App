@@ -40,6 +40,7 @@ import { runJavaScriptProblem } from '../utils/codeRunner';
 import { SpinningWheelModal, WheelReward } from './SpinningWheelModal';
 import { DayWiseMockTestSelector } from './DayWiseMockTestSelector';
 import { DayDomainMockTest, ALL_DAY_MOCK_TESTS } from '../data/dayWiseMockTests';
+import { DayWiseInterviewTipsCard } from './DayWiseInterviewTipsCard';
 
 interface AssessmentsViewProps {
   questions: AptitudeQuestion[];
@@ -47,7 +48,7 @@ interface AssessmentsViewProps {
   submissions: CodingSubmission[];
   onCompleteAptitude: (result: AptitudeAssessmentResult) => void;
   onSubmitCoding: (submission: CodingSubmission) => void;
-  defaultSubTab?: 'aptitude' | 'coding';
+  defaultSubTab?: 'aptitude' | 'coding' | 'tips';
 }
 
 type ModuleFilter = 'all' | AssessmentCategory;
@@ -60,7 +61,7 @@ export function AssessmentsView({
   onSubmitCoding,
   defaultSubTab = 'aptitude',
 }: AssessmentsViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding'>(defaultSubTab);
+  const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding' | 'tips'>(defaultSubTab);
   const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules'>('day_wise');
   const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
 
@@ -488,31 +489,43 @@ export function AssessmentsView({
 
   return (
     <div className="space-y-4 pb-20 max-w-lg mx-auto text-white">
-      {/* Primary Sub-Tab Switcher: Assessments vs Coding Arena */}
-      <div className="flex bg-black p-1 rounded-2xl border-2 border-amber-500/40 shadow-lg">
+      {/* Primary Sub-Tab Switcher: Assessments vs Interview Tips vs Coding Arena */}
+      <div className="flex bg-black p-1 rounded-2xl border-2 border-amber-500/40 shadow-lg gap-1">
         <button
           id="assessment-tab-aptitude"
           onClick={() => setActiveSubTab('aptitude')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeSubTab === 'aptitude'
               ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
               : 'text-neutral-400 hover:text-white'
           }`}
         >
-          <BrainCircuit className="w-4 h-4 stroke-[2.5]" />
-          <span>Assessments Portal</span>
+          <BrainCircuit className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Mocks</span>
+        </button>
+        <button
+          id="assessment-tab-tips"
+          onClick={() => setActiveSubTab('tips')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            activeSubTab === 'tips'
+              ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
+              : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Lightbulb className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Daily Tips</span>
         </button>
         <button
           id="assessment-tab-coding"
           onClick={() => setActiveSubTab('coding')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeSubTab === 'coding'
               ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
               : 'text-neutral-400 hover:text-white'
           }`}
         >
-          <Code2 className="w-4 h-4 stroke-[2.5]" />
-          <span>Coding Arena</span>
+          <Code2 className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Coding (14)</span>
         </button>
       </div>
 
@@ -1158,7 +1171,16 @@ export function AssessmentsView({
       )}
 
       {/* ============================================================== */}
-      {/* SUB-TAB 2: CODING ASSESSMENT ARENA (Black, White & Gold) */}
+      {/* SUB-TAB 2: PLACEMENT & INTERVIEW TIPS (DAY 1, 2, 3...) */}
+      {/* ============================================================== */}
+      {activeSubTab === 'tips' && (
+        <div className="space-y-4">
+          <DayWiseInterviewTipsCard currentDay={1} />
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SUB-TAB 3: CODING ASSESSMENT ARENA (Black, White & Gold) */}
       {/* ============================================================== */}
       {activeSubTab === 'coding' && (
         <div className="space-y-4">
