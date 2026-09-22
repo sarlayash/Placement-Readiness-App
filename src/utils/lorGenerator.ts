@@ -53,11 +53,6 @@ export interface LetterOfRecommendationData {
       title: string;
       organization: string;
     };
-    coSignatory: {
-      name: string;
-      title: string;
-      board: string;
-    };
   };
 }
 
@@ -299,11 +294,6 @@ export function generateLetterOfRecommendationData(
         name: 'Kapil Narula',
         title: 'Lead Placement Architect & Technology Director',
         organization: 'SarlaYash Mission Placement Directorate',
-      },
-      coSignatory: {
-        name: 'Dr. Anandvardhan Rao',
-        title: 'Dean of Technical Competency & Evaluation Board',
-        board: 'National Placement Intelligence Assessment Council',
       },
     },
   };

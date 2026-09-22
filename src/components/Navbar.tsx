@@ -94,16 +94,12 @@ export function Navbar({
             </button>
           )}
 
-          {/* Admin Command Center Access */}
-          {onOpenAdmin && (
+          {/* Admin Command Center Access - strictly hidden for learners */}
+          {onOpenAdmin && isAdminAuthenticated && (
             <button
               id="nav-admin-portal-btn"
               onClick={onOpenAdmin}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider transition-all border cursor-pointer active:scale-95 ${
-                isAdminAuthenticated
-                  ? 'bg-blue-600 text-white border-sky-400 shadow-md shadow-blue-600/30'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-sky-300 border-blue-500/30'
-              }`}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider transition-all border cursor-pointer active:scale-95 bg-blue-600 text-white border-sky-400 shadow-md shadow-blue-600/30"
               title="Admin Dashboard (Executive Performance Tracking)"
             >
               <Shield className="w-3.5 h-3.5 stroke-[2.5]" />

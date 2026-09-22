@@ -91,6 +91,12 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
+        if (user.email === 'kapilnarula27july@gmail.com') {
+          setIsAdminAuthenticated(true);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('isAdminAuth', 'true');
+          }
+        }
         try {
           const initialProf = await initializeUserAccount(user);
           if (initialProf) {
@@ -379,12 +385,19 @@ export default function App() {
     return <GoogleAuthScreen onSignedIn={() => {}} />;
   }
 
+  // Master Admin verification (Strictly restricted to Kapil Narula)
+  const isMasterAdmin =
+    isAdminAuthenticated ||
+    currentUser?.email === 'kapilnarula27july@gmail.com' ||
+    (typeof window !== 'undefined' &&
+      (window.location.search.includes('admin=true') || sessionStorage.getItem('isAdminAuth') === 'true'));
+
   // Content switcher
   const renderCurrentView = () => {
-    if (isAdminMode) {
+    if (isAdminMode && isMasterAdmin) {
       return (
         <AdminDashboardView
-          isAdminAuthenticated={isAdminAuthenticated}
+          isAdminAuthenticated={isAdminAuthenticated || currentUser?.email === 'kapilnarula27july@gmail.com'}
           onLoginSuccess={() => {
             setIsAdminAuthenticated(true);
             if (typeof window !== 'undefined') {
@@ -471,7 +484,6 @@ export default function App() {
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
             onSignOut={handleSignOut}
-            onOpenAdmin={() => setIsAdminMode(true)}
             onOpenCertificate={() => {
               setSelectedInspectionProfile(null);
               setShowCertificateModal(true);
@@ -533,8 +545,8 @@ export default function App() {
             setSelectedInspectionProfile(null);
             setShowLORModal(true);
           }}
-          onOpenAdmin={() => setIsAdminMode(!isAdminMode)}
-          isAdminAuthenticated={isAdminAuthenticated}
+          onOpenAdmin={isMasterAdmin ? () => setIsAdminMode(!isAdminMode) : undefined}
+          isAdminAuthenticated={isMasterAdmin}
         />
 
         {/* Main Content Area */}
@@ -589,7 +601,6 @@ export default function App() {
             setShowLORModal(false);
             setSelectedInspectionProfile(null);
           }}
-          onUpdateProfile={handleUpdateProfile}
         />
       )}
     </div>

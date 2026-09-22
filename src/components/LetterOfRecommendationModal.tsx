@@ -21,7 +21,6 @@ import {
   Cpu,
   Flame,
   UserCheck,
-  Edit3,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -48,7 +47,6 @@ interface LetterOfRecommendationModalProps {
   submissions?: CodingSubmission[];
   aptitudeResults?: AptitudeAssessmentResult[];
   onClose: () => void;
-  onUpdateProfile?: (updated: StudentProfile) => void;
 }
 
 export function LetterOfRecommendationModal({
@@ -58,53 +56,32 @@ export function LetterOfRecommendationModal({
   submissions = [],
   aptitudeResults = [],
   onClose,
-  onUpdateProfile,
 }: LetterOfRecommendationModalProps) {
   const [docTheme, setDocTheme] = useState<'light' | 'dark'>('light');
   const [pageMode, setPageMode] = useState<'single' | 'comprehensive'>('single');
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingPNG, setIsExportingPNG] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
-
-  // Editable local overrides for student credentials
-  const [customName, setCustomName] = useState(profile.fullName || 'Learner');
-  const [customCollege, setCustomCollege] = useState(profile.college || 'Engineering & Technology Institute');
-  const [customDegree, setCustomDegree] = useState(profile.degree || 'Bachelor of Technology (B.Tech)');
-  const [customBranch, setCustomBranch] = useState(profile.branch || 'Computer Science & Engineering');
-  const [customRole, setCustomRole] = useState<string>(profile.targetRole || 'Software Development Engineer');
 
   // DOM Refs for multi-page / single-page export
   const singlePageRef = useRef<HTMLDivElement | null>(null);
   const page1Ref = useRef<HTMLDivElement | null>(null);
   const page2Ref = useRef<HTMLDivElement | null>(null);
 
-  // Generate data memoized
+  // Generate verified data from student profile (immutable for learners)
   const lorData: LetterOfRecommendationData = useMemo(() => {
-    const data = generateLetterOfRecommendationData(
+    return generateLetterOfRecommendationData(
       profile,
       readiness,
       skills,
       submissions,
       aptitudeResults
     );
-    // Apply user customizations if edited
-    return {
-      ...data,
-      student: {
-        ...data.student,
-        fullName: customName,
-        college: customCollege,
-        degree: customDegree,
-        branch: customBranch,
-        targetRole: customRole,
-      },
-    };
-  }, [profile, readiness, skills, submissions, aptitudeResults, customName, customCollege, customDegree, customBranch, customRole]);
+  }, [profile, readiness, skills, submissions, aptitudeResults]);
 
   // Clean filename generator
   const getExportFileName = (extension: 'pdf' | 'png') => {
-    const sanitizedName = (customName || 'Candidate').replace(/[^a-zA-Z0-9]/g, '_');
+    const sanitizedName = (profile.fullName || 'Candidate').replace(/[^a-zA-Z0-9]/g, '_');
     return `SarlaYash_Mission_Letter_Of_Recommendation_${sanitizedName}_${pageMode}_${docTheme}.${extension}`;
   };
 
@@ -238,16 +215,6 @@ export function LetterOfRecommendationModal({
               </button>
             </div>
 
-            {/* Quick Edit Student Details Button */}
-            <button
-              onClick={() => setIsEditingMetadata(!isEditingMetadata)}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1 transition-colors border border-slate-700 cursor-pointer"
-              title="Edit learner details shown on the recommendation"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-sky-400" />
-              <span className="hidden sm:inline">Edit Details</span>
-            </button>
-
             {/* Download PDF Button */}
             <button
               id="download-lor-pdf-btn"
@@ -300,57 +267,6 @@ export function LetterOfRecommendationModal({
             </button>
           </div>
         </div>
-
-        {/* Collapsible Quick-Edit Panel */}
-        {isEditingMetadata && (
-          <div className="bg-[#0b1329] border-b border-slate-800 px-4 sm:px-6 py-3 text-xs text-slate-300 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 animate-fade-in shrink-0">
-            <div>
-              <label className="text-[10px] font-bold text-sky-300 uppercase block mb-1">Student Name</label>
-              <input
-                type="text"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-sky-300 uppercase block mb-1">College / Institute</label>
-              <input
-                type="text"
-                value={customCollege}
-                onChange={(e) => setCustomCollege(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-sky-300 uppercase block mb-1">Degree</label>
-              <input
-                type="text"
-                value={customDegree}
-                onChange={(e) => setCustomDegree(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-sky-300 uppercase block mb-1">Branch / Major</label>
-              <input
-                type="text"
-                value={customBranch}
-                onChange={(e) => setCustomBranch(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-sky-300 uppercase block mb-1">Target Engineering Role</label>
-              <input
-                type="text"
-                value={customRole}
-                onChange={(e) => setCustomRole(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
-              />
-            </div>
-          </div>
-        )}
 
         {/* Scrollable Letter Preview Workspace */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#030612] flex flex-col items-center gap-6">
@@ -561,8 +477,20 @@ export function LetterOfRecommendationModal({
                   </div>
                 </div>
 
-                {/* Center: Official Institutional Crest Seal */}
-                <div className="flex flex-col items-center justify-center">
+                {/* Center / Right: Official Institutional Crest Seal & Reference */}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[9px] font-black uppercase tracking-wider text-slate-700" style={{ color: isLight ? '#334155' : '#94a3b8' }}>
+                      Certified & Endorsed
+                    </div>
+                    <div className="text-[10px] font-black text-amber-600">
+                      SarlaYash Mission Directorate
+                    </div>
+                    <div className="text-[7px] text-slate-400 font-mono font-bold mt-0.5">
+                      REF ID: {lorData.referenceId}
+                    </div>
+                  </div>
+
                   <div className="w-16 h-16 rounded-full border-2 border-amber-500/70 p-1 flex items-center justify-center bg-amber-500/5 shadow-inner">
                     <div className="w-full h-full rounded-full border border-dashed border-amber-500 flex flex-col items-center justify-center text-center p-1">
                       <Award className="w-4 h-4 text-amber-600 mb-0.5" />
@@ -573,36 +501,6 @@ export function LetterOfRecommendationModal({
                         OFFICIAL SEAL
                       </span>
                     </div>
-                  </div>
-                  <span className="text-[7px] text-slate-400 mt-1 uppercase font-bold tracking-wider">
-                    Secured ID: {lorData.referenceId.slice(-8)}
-                  </span>
-                </div>
-
-                {/* Right Signature: Academic Evaluation Board */}
-                <div className="text-right space-y-1">
-                  <div className="h-9 flex items-center justify-end">
-                    <svg viewBox="0 0 200 45" className="h-8 text-indigo-900 stroke-current fill-none" style={{ color: isLight ? '#312e81' : '#818cf8' }}>
-                      <path
-                        d="M 20 28 Q 50 12 75 32 T 115 15 T 145 28 T 175 14"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M 50 35 L 140 35"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                  <div className="text-[11px] font-black text-slate-900 leading-none" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>
-                    {lorData.institutionalSignatories.coSignatory.name}
-                  </div>
-                  <div className="text-[9px] font-bold text-indigo-700" style={{ color: isLight ? '#4338ca' : '#a5b4fc' }}>
-                    {lorData.institutionalSignatories.coSignatory.title}
-                  </div>
-                  <div className="text-[8px] text-slate-500">
-                    {lorData.institutionalSignatories.coSignatory.board}
                   </div>
                 </div>
               </div>
@@ -725,7 +623,7 @@ export function LetterOfRecommendationModal({
                   </div>
                 </div>
 
-                {/* Page 1 Footer Signatures */}
+                {/* Page 1 Footer Signature */}
                 <div className="pt-6 border-t-2 border-slate-200 flex items-end justify-between">
                   <div className="space-y-1">
                     <div className="text-[11px] font-black text-slate-900" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>
@@ -739,17 +637,8 @@ export function LetterOfRecommendationModal({
                     </div>
                   </div>
 
-                  <div className="text-center text-[10px] text-slate-400 font-bold">
-                    [Continued on Page 2: Full Domain XP & Section Register]
-                  </div>
-
-                  <div className="text-right space-y-1">
-                    <div className="text-[11px] font-black text-slate-900" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>
-                      {lorData.institutionalSignatories.coSignatory.name}
-                    </div>
-                    <div className="text-[9px] font-bold text-indigo-700" style={{ color: isLight ? '#4338ca' : '#a5b4fc' }}>
-                      {lorData.institutionalSignatories.coSignatory.title}
-                    </div>
+                  <div className="text-right text-[10px] text-slate-400 font-bold">
+                    [Page 1 of 2 • Detailed Domain XP Register On Next Page]
                   </div>
                 </div>
               </div>
@@ -875,10 +764,25 @@ export function LetterOfRecommendationModal({
                     <div className="text-[9px] font-bold text-blue-700" style={{ color: isLight ? '#1d4ed8' : '#38bdf8' }}>
                       {lorData.institutionalSignatories.leadSignatory.title}
                     </div>
+                    <div className="text-[8px] text-slate-500">
+                      {lorData.institutionalSignatories.leadSignatory.organization}
+                    </div>
                   </div>
 
-                  {/* Center Official Gold Seal */}
-                  <div className="flex flex-col items-center">
+                  {/* Right Official Gold Seal & Secured Reference */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-[9px] font-black uppercase tracking-wider text-slate-700" style={{ color: isLight ? '#334155' : '#94a3b8' }}>
+                        Accredited Placement Credential
+                      </div>
+                      <div className="text-[10px] font-black text-amber-600">
+                        SarlaYash Mission Placement Directorate
+                      </div>
+                      <div className="text-[7px] text-slate-400 font-mono font-bold mt-0.5">
+                        SECURED ID: {lorData.referenceId}
+                      </div>
+                    </div>
+
                     <div className="w-16 h-16 rounded-full border-2 border-amber-500/80 p-1 flex items-center justify-center bg-amber-500/5">
                       <div className="w-full h-full rounded-full border border-dashed border-amber-600 flex flex-col items-center justify-center text-center p-1">
                         <Award className="w-4 h-4 text-amber-600" />
@@ -886,18 +790,6 @@ export function LetterOfRecommendationModal({
                           SYM ACCREDITED
                         </span>
                       </div>
-                    </div>
-                    <span className="text-[7px] text-slate-400 font-mono font-bold mt-1">
-                      {lorData.referenceId}
-                    </span>
-                  </div>
-
-                  <div className="text-right space-y-1">
-                    <div className="text-[11px] font-black text-slate-900" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>
-                      {lorData.institutionalSignatories.coSignatory.name}
-                    </div>
-                    <div className="text-[9px] font-bold text-indigo-700" style={{ color: isLight ? '#4338ca' : '#a5b4fc' }}>
-                      {lorData.institutionalSignatories.coSignatory.title}
                     </div>
                   </div>
                 </div>

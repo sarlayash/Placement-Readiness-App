@@ -15,7 +15,6 @@ import {
   LogOut,
   ShieldCheck,
   CloudCheck,
-  Shield,
   FileText,
   Award,
 } from 'lucide-react';
@@ -29,7 +28,6 @@ interface ProfileViewProps {
   profile: StudentProfile;
   onUpdateProfile: (updated: StudentProfile) => void;
   onSignOut?: () => void;
-  onOpenAdmin?: () => void;
   onOpenLOR?: () => void;
   onOpenCertificate?: () => void;
   isSaving?: boolean;
@@ -39,7 +37,6 @@ export function ProfileView({
   profile,
   onUpdateProfile,
   onSignOut,
-  onOpenAdmin,
   onOpenLOR,
   onOpenCertificate,
   isSaving = false,
@@ -459,18 +456,6 @@ export function ProfileView({
                 </button>
               )}
             </div>
-          )}
-
-          {onOpenAdmin && (
-            <button
-              type="button"
-              id="profile-admin-portal-btn"
-              onClick={onOpenAdmin}
-              className="w-full py-2.5 px-3 rounded-xl bg-black border border-amber-500/40 hover:border-amber-400 text-amber-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Shield className="w-3.5 h-3.5 text-amber-400 stroke-[2.5]" />
-              <span>Executive Administrator Portal</span>
-            </button>
           )}
         </div>
       </form>
