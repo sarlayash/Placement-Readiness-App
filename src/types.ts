@@ -90,6 +90,14 @@ export interface CodingProblem {
     python: string;
     java: string;
     cpp: string;
+    c?: string;
+  };
+  solvedSolutions?: {
+    c: string;
+    cpp: string;
+    java: string;
+    python: string;
+    javascript?: string;
   };
   testCases: CodingTestCase[];
   solutionHints: string[];

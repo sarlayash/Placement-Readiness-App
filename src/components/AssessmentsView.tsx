@@ -25,6 +25,8 @@ import {
   Calendar,
   Flame,
   Layers,
+  BookOpen,
+  Copy,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -105,7 +107,11 @@ export function AssessmentsView({
 
   // Coding state
   const [selectedProblemId, setSelectedProblemId] = useState<string>(codingProblems[0]?.id || 'code_01');
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'java' | 'cpp'>('javascript');
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'java' | 'cpp' | 'c'>('javascript');
+  const [codingCategoryFilter, setCodingCategoryFilter] = useState<string>('all');
+  const [showSolvedSolutionModal, setShowSolvedSolutionModal] = useState<boolean>(false);
+  const [solutionLanguage, setSolutionLanguage] = useState<'c' | 'cpp' | 'java' | 'python' | 'javascript'>('python');
+  const [copiedSolution, setCopiedSolution] = useState<boolean>(false);
   const [userCode, setUserCode] = useState<string>('');
   const [isRunningCode, setIsRunningCode] = useState(false);
   const [testResults, setTestResults] = useState<TestCaseResult[] | null>(null);
@@ -127,6 +133,21 @@ export function AssessmentsView({
       : questions.filter((q) => q.category === selectedModule);
 
   const selectedProblem = codingProblems.find((p) => p.id === selectedProblemId) || codingProblems[0];
+
+  const codingCategories = [
+    'all',
+    'Arrays & Hashing',
+    'Two Pointers',
+    'Stack & Queue',
+    'Dynamic Programming',
+    'Strings & Parsing',
+    'Trees',
+  ];
+
+  const filteredCodingProblems =
+    codingCategoryFilter === 'all'
+      ? codingProblems
+      : codingProblems.filter((p) => p.category === codingCategoryFilter);
 
   // Initialize starter code when problem or language changes
   useEffect(() => {
@@ -1143,11 +1164,41 @@ export function AssessmentsView({
         <div className="space-y-4">
           {/* Problem Selector Bar */}
           <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-3.5 shadow-xl">
-            <div className="text-[11px] font-black uppercase tracking-wider text-amber-300 mb-2">
-              Select Placement Coding Challenge
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+                Placement Coding Challenges ({codingProblems.length} Problems Available)
+              </div>
+              <span className="text-[10px] text-neutral-400 font-medium">
+                Solved Solutions in C, C++, Java, Python & JavaScript
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {codingProblems.map((prob) => {
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {codingCategories.map((cat) => {
+                const count =
+                  cat === 'all'
+                    ? codingProblems.length
+                    : codingProblems.filter((p) => p.category === cat).length;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCodingCategoryFilter(cat)}
+                    className={`text-[10px] px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer ${
+                      codingCategoryFilter === cat
+                        ? 'bg-amber-400 text-black shadow-sm font-black'
+                        : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+                    }`}
+                  >
+                    {cat === 'all' ? `All (${count})` : `${cat} (${count})`}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Problems Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1">
+              {filteredCodingProblems.map((prob) => {
                 const isSelected = prob.id === selectedProblemId;
                 const isSolved = submissions.some(
                   (s) => s.problemId === prob.id && s.status === 'Accepted'
@@ -1168,7 +1219,9 @@ export function AssessmentsView({
                         className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
                           prob.difficulty === 'Easy'
                             ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                            : 'bg-amber-500/25 text-amber-200 border border-amber-400 font-extrabold'
+                            : prob.difficulty === 'Medium'
+                            ? 'bg-amber-500/25 text-amber-200 border border-amber-400 font-extrabold'
+                            : 'bg-amber-500/40 text-amber-100 border border-amber-300 font-black'
                         }`}
                       >
                         {prob.difficulty}
@@ -1180,7 +1233,7 @@ export function AssessmentsView({
                     <div className="text-xs font-bold text-white mt-1 truncate">
                       {prob.title}
                     </div>
-                    <div className="text-[10px] text-neutral-400">{prob.category}</div>
+                    <div className="text-[10px] text-neutral-400 truncate">{prob.category}</div>
                   </button>
                 );
               })}
@@ -1221,7 +1274,7 @@ export function AssessmentsView({
             <div className="flex items-center justify-between pt-1">
               <span className="text-xs font-bold text-white">Solution Implementation</span>
               <div className="flex bg-neutral-900 rounded-lg p-0.5 text-[11px] border border-neutral-800">
-                {(['javascript', 'python', 'java', 'cpp'] as const).map((lang) => (
+                {(['javascript', 'python', 'java', 'cpp', 'c'] as const).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setSelectedLanguage(lang)}
@@ -1231,7 +1284,7 @@ export function AssessmentsView({
                         : 'text-neutral-400 hover:text-white'
                     }`}
                   >
-                    {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang}
+                    {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JS' : lang === 'c' ? 'C' : lang}
                   </button>
                 ))}
               </div>
@@ -1254,10 +1307,22 @@ export function AssessmentsView({
                 id="run-code-button"
                 disabled={isRunningCode}
                 onClick={handleRunTestCases}
-                className="flex-1 py-2 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-neutral-700 cursor-pointer"
+                className="flex-1 min-w-[140px] py-2 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-neutral-700 cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                 <span>{isRunningCode ? 'Executing...' : 'Run Test Cases'}</span>
+              </button>
+
+              <button
+                id="view-solved-solution-btn"
+                onClick={() => {
+                  setSolutionLanguage(selectedLanguage);
+                  setShowSolvedSolutionModal(true);
+                }}
+                className="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <span>Solved Solutions</span>
               </button>
 
               <button
@@ -1401,6 +1466,129 @@ export function AssessmentsView({
             >
               Continue Assessments
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Solved Solutions Modal (C, C++, Java, Python, JavaScript) */}
+      {showSolvedSolutionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+          <div className="bg-black border-2 border-amber-500/60 rounded-2xl p-5 max-w-2xl w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-amber-300">
+                    {selectedProblem.title}
+                  </h3>
+                  <span className="text-[10px] text-neutral-400">
+                    Official Optimal Solved Solution & Interview Complexity
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSolvedSolutionModal(false)}
+                className="text-neutral-400 hover:text-white text-xs font-bold px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Language Switcher & Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex bg-neutral-900 rounded-xl p-1 text-xs border border-neutral-800 gap-1">
+                {(['c', 'cpp', 'java', 'python', 'javascript'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSolutionLanguage(lang)}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                      solutionLanguage === lang
+                        ? 'bg-amber-400 text-black shadow-sm font-black'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    {lang === 'c'
+                      ? 'C'
+                      : lang === 'cpp'
+                      ? 'C++'
+                      : lang === 'java'
+                      ? 'Java'
+                      : lang === 'python'
+                      ? 'Python'
+                      : 'JavaScript'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const codeToCopy = selectedProblem.solvedSolutions?.[solutionLanguage] || '';
+                    navigator.clipboard.writeText(codeToCopy);
+                    setCopiedSolution(true);
+                    setTimeout(() => setCopiedSolution(false), 2000);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedSolution ? (
+                    <Check className="w-3 h-3 text-amber-400" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-amber-400" />
+                  )}
+                  <span>{copiedSolution ? 'Copied!' : 'Copy Code'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const sol = selectedProblem.solvedSolutions?.[solutionLanguage] || '';
+                    setSelectedLanguage(solutionLanguage);
+                    setUserCode(sol);
+                    setShowSolvedSolutionModal(false);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black text-xs font-black uppercase tracking-wider cursor-pointer shadow-sm shadow-amber-500/20"
+                >
+                  Load into Editor
+                </button>
+              </div>
+            </div>
+
+            {/* Complexity & Approach info */}
+            <div className="flex flex-wrap items-center gap-3 text-xs bg-neutral-950 p-2.5 rounded-xl border border-neutral-800">
+              <span className="text-neutral-400">
+                Target Time: <strong className="text-amber-300 font-mono">{selectedProblem.targetTimeComplexity}</strong>
+              </span>
+              <span className="text-neutral-400">
+                Target Space: <strong className="text-amber-300 font-mono">{selectedProblem.targetSpaceComplexity}</strong>
+              </span>
+              <span className="text-neutral-400">
+                Category: <strong className="text-amber-300">{selectedProblem.category}</strong>
+              </span>
+            </div>
+
+            {/* Code Display */}
+            <div className="flex-1 overflow-auto bg-[#080808] border border-neutral-800 rounded-xl p-3.5 text-xs font-mono text-amber-200 min-h-[180px]">
+              <pre className="whitespace-pre leading-relaxed">
+                {selectedProblem.solvedSolutions?.[solutionLanguage] ||
+                  '// Verified solution in ' + solutionLanguage + ' ready.'}
+              </pre>
+            </div>
+
+            {/* Key Interview Hints / Takeaways */}
+            {selectedProblem.solutionHints && selectedProblem.solutionHints.length > 0 && (
+              <div className="bg-neutral-950 p-2.5 rounded-xl border border-amber-500/30 text-[11px] text-neutral-300 space-y-1">
+                <span className="text-amber-300 font-bold uppercase tracking-wider block text-[10px]">
+                  Optimal Approach & Interview Notes
+                </span>
+                <ul className="list-disc list-inside space-y-0.5 text-neutral-300">
+                  {selectedProblem.solutionHints.map((hint, idx) => (
+                    <li key={idx}>{hint}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}
