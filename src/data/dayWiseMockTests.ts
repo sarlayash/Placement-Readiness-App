@@ -1662,22 +1662,12 @@ export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
   ],
 };
 
-// Extensible Day Registry: Day 1 active; Day 2, Day 3 structured and ready
+import { DAY_2_MOCK_TEST_PACK, ALL_DAY_2_QUESTIONS } from './day2MockTests';
+
+// Extensible Day Registry: Day 1 & Day 2 active; Day 3 structured and ready
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
-  {
-    dayNumber: 2,
-    title: 'Day 2: Advanced Technical & Problem Solving',
-    tagline: '11 Domains • 10 MCQs each • Scheduled Next',
-    description: 'Day 2 placement suite focusing on advanced algorithmic trees, complex SQL subqueries, multi-turn AI agent architectures, and business case scenarios.',
-    status: 'upcoming',
-    totalQuestions: 110,
-    domains: DAY_1_MOCK_TEST_PACK.domains.map(d => ({
-      ...d,
-      tagline: `Day 2: Advanced ${d.domainName} Suite`,
-      questions: d.questions, // Can be updated as user adds Day 2 questions daily
-    })),
-  },
+  DAY_2_MOCK_TEST_PACK,
   {
     dayNumber: 3,
     title: 'Day 3: Speed & High-Pressure Placement Simulation',
@@ -1685,7 +1675,7 @@ export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
     description: 'Day 3 placement suite focusing on rapid elimination techniques, boundary corner cases, and high-frequency company interview questions.',
     status: 'upcoming',
     totalQuestions: 110,
-    domains: DAY_1_MOCK_TEST_PACK.domains.map(d => ({
+    domains: DAY_2_MOCK_TEST_PACK.domains.map(d => ({
       ...d,
       tagline: `Day 3: Mastery ${d.domainName} Suite`,
       questions: d.questions, // Can be updated as user adds Day 3 questions daily
@@ -1697,6 +1687,8 @@ export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
 export const ALL_DAY_1_QUESTIONS: AptitudeQuestion[] = DAY_1_MOCK_TEST_PACK.domains.flatMap(
   (d) => d.questions
 );
+
+export { DAY_2_MOCK_TEST_PACK, ALL_DAY_2_QUESTIONS };
 
 export function getMockTestForDayAndDomain(
   dayNumber: number,

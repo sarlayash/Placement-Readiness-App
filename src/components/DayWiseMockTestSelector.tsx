@@ -173,7 +173,7 @@ export function DayWiseMockTestSelector({
                     : 'bg-neutral-950 text-neutral-500 border border-neutral-900 hover:text-neutral-400'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-black' : isActivePack ? 'bg-emerald-400' : 'bg-neutral-600'}" />
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-black' : isActivePack ? 'bg-emerald-400' : 'bg-neutral-600'}`} />
                 <span>Day {pack.dayNumber}</span>
                 {isActivePack ? (
                   <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
