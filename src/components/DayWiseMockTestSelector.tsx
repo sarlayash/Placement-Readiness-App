@@ -60,6 +60,12 @@ export function DayWiseMockTestSelector({
         return MessageSquare;
       case 'soft_skills':
         return Award;
+      case 'professional_writing':
+        return BookOpen;
+      case 'business_communication':
+        return MessageSquare;
+      case 'emotional_intelligence':
+        return Award;
       case 'coding':
         return Code2;
       case 'excel':

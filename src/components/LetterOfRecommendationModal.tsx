@@ -368,7 +368,7 @@ export function LetterOfRecommendationModal({
                       Verified Domain XP & Competency Assessment Breakdown
                     </h3>
                     <span className="text-[10px] font-bold text-slate-500">
-                      Total Evaluated XP: <strong className="text-blue-700" style={{ color: isLight ? '#1d4ed8' : '#38bdf8' }}>{lorData.overallReadiness.totalEarnedXP} XP</strong> across 11 Sections
+                      Total Evaluated XP: <strong className="text-blue-700" style={{ color: isLight ? '#1d4ed8' : '#38bdf8' }}>{lorData.overallReadiness.totalEarnedXP} XP</strong> across 14 Competency Domains
                     </span>
                   </div>
 
@@ -683,7 +683,7 @@ export function LetterOfRecommendationModal({
                   <div className="mt-4 flex items-center justify-between">
                     <div>
                       <h2 className="text-sm font-black uppercase tracking-wider text-blue-900 font-serif" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>
-                        Comprehensive 11-Domain XP & Competency Breakdown
+                        Comprehensive 14-Domain XP & Competency Breakdown
                       </h2>
                       <p className="text-[10px] text-slate-500 mt-0.5">
                         Detailed granular evaluation across all assessed technical and analytical sections

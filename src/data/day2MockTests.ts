@@ -15,12 +15,21 @@ import {
   DAY_2_LOGICAL_QUESTIONS,
 } from './day2Questions/domainsPart2';
 
+import {
+  DAY_2_PROFESSIONAL_WRITING_QUESTIONS,
+  DAY_2_BUSINESS_COMMUNICATION_QUESTIONS,
+  DAY_2_EMOTIONAL_INTELLIGENCE_QUESTIONS,
+} from './professionalAssessmentsDay2';
+
 import { DayMockTestPack } from './dayWiseMockTests';
 import { AptitudeQuestion } from '../types';
 
 export {
   DAY_2_VERBAL_QUESTIONS,
   DAY_2_SOFT_SKILLS_QUESTIONS,
+  DAY_2_PROFESSIONAL_WRITING_QUESTIONS,
+  DAY_2_BUSINESS_COMMUNICATION_QUESTIONS,
+  DAY_2_EMOTIONAL_INTELLIGENCE_QUESTIONS,
   DAY_2_CODING_QUESTIONS,
   DAY_2_EXCEL_QUESTIONS,
   DAY_2_SQL_QUESTIONS,
@@ -34,12 +43,12 @@ export {
 
 export const DAY_2_MOCK_TEST_PACK: DayMockTestPack = {
   dayNumber: 2,
-  title: 'Day 2: Advanced Technical & Problem Solving',
-  tagline: '11 Domains • 10 MCQs each • 110 MCQs Total',
+  title: 'Day 2: Advanced Technical, Leadership & Problem Solving',
+  tagline: '14 Domains • 10 MCQs each • 140 MCQs Total',
   description:
-    'Comprehensive Day 2 placement evaluation featuring advanced graph algorithms, financial modeling in Excel, SQL window functions, FlashAttention/KV caching in GenAI, autonomous ReAct loops, and quantitative placement problems.',
+    'Comprehensive Day 2 placement evaluation featuring advanced graph algorithms, financial modeling in Excel, SQL window functions, FlashAttention/KV caching in GenAI, autonomous ReAct loops, cross-cultural professional writing, executive business communication, emotional intelligence, and quantitative placement problems.',
   status: 'active',
-  totalQuestions: 110,
+  totalQuestions: 140,
   domains: [
     {
       category: 'verbal',
@@ -58,6 +67,33 @@ export const DAY_2_MOCK_TEST_PACK: DayMockTestPack = {
       tagline: 'Upward Management, Blameless Post-Mortems & Scope Creep',
       targetRoles: ['Engineering Leads', 'Scrum Masters', 'Client Facing Roles'],
       questions: DAY_2_SOFT_SKILLS_QUESTIONS,
+    },
+    {
+      category: 'professional_writing',
+      domainName: 'Professional Writing',
+      shortCode: 'PW',
+      badgeColor: '#06B6D4',
+      tagline: 'Cross-Cultural Specs, CVE Disclosures & Analytical KPIs',
+      targetRoles: ['Technical Writers, Senior SDEs, Solution Architects'],
+      questions: DAY_2_PROFESSIONAL_WRITING_QUESTIONS,
+    },
+    {
+      category: 'business_communication',
+      domainName: 'Business Communication',
+      shortCode: 'BC',
+      badgeColor: '#8B5CF6',
+      tagline: 'Power-Interest Matrices, Tech Debt Defense & Crisis PR',
+      targetRoles: ['Product Managers, Consultants, Project Leads'],
+      questions: DAY_2_BUSINESS_COMMUNICATION_QUESTIONS,
+    },
+    {
+      category: 'emotional_intelligence',
+      domainName: 'Emotional Intelligence (EQ)',
+      shortCode: 'EQ',
+      badgeColor: '#EC4899',
+      tagline: 'Cognitive Bias Audits, Emotional Contagion & Re-org Resilience',
+      targetRoles: ['Engineering Managers, Tech Leads, Directors'],
+      questions: DAY_2_EMOTIONAL_INTELLIGENCE_QUESTIONS,
     },
     {
       category: 'coding',

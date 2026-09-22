@@ -13,6 +13,8 @@ import {
   Cpu,
   Zap,
   Download,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { Badge, StudentProfile } from '../types';
 import { downloadBadgeAsPNG } from '../utils/pngExporter';
@@ -107,6 +109,10 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
         return <Sparkles className={`w-5 h-5 ${colorClass}`} />;
       case 'Award':
         return <Award className={`w-5 h-5 ${colorClass}`} />;
+      case 'FileText':
+        return <FileText className={`w-5 h-5 ${colorClass}`} />;
+      case 'MessageSquare':
+        return <MessageSquare className={`w-5 h-5 ${colorClass}`} />;
       default:
         return <Terminal className={`w-5 h-5 ${colorClass}`} />;
     }

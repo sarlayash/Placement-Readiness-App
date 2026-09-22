@@ -36,6 +36,9 @@ export function CertificateModal({
   const verifiedSkills = [
     'Verbal Ability',
     'Soft Skills',
+    'Professional Writing',
+    'Business Communication',
+    'Emotional Intelligence (EQ)',
     'Coding & DSA',
     'Excel Analytics',
     'SQL Databases',
@@ -258,9 +261,9 @@ export function CertificateModal({
                 {profile.college ? (
                   <>from <strong className={certTheme === 'dark' ? 'text-white' : 'text-slate-900'}>{profile.college}</strong>, </>
                 ) : null}
-                has fulfilled all rigorous evaluation standards across 9 core competencies including{' '}
+                has fulfilled all rigorous evaluation standards across 12 core competencies including{' '}
                 <span className={certTheme === 'dark' ? 'text-sky-300 font-bold' : 'text-blue-700 font-bold'}>
-                  Verbal Reasoning, Soft Skills, Coding & Algorithms, Data Analytics, AI & Agentic Systems
+                  Verbal Reasoning, Professional Writing, Business Communication, EQ, DSA, Data Analytics & Agentic AI
                 </span>
                 , exhibiting tier-one placement caliber.
               </p>
@@ -340,7 +343,7 @@ export function CertificateModal({
                   Standing
                 </span>
                 <span className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5 block">
-                  All 9 Tracks Cleared
+                  All 12 Tracks Cleared
                 </span>
                 <span className="text-[9px] text-slate-400 block font-medium">
                   Verified Accreditation

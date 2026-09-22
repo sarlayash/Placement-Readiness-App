@@ -1552,13 +1552,25 @@ export const DAY_1_LOGICAL_QUESTIONS: AptitudeQuestion[] = [
 // DAY-WISE PACK REGISTRY (DAY 1 FULLY POPULATED + EXTENSIBLE TO DAY 2, DAY 3...)
 // ============================================================================
 
+import { DAY_2_MOCK_TEST_PACK, ALL_DAY_2_QUESTIONS } from './day2MockTests';
+import {
+  DAY_1_PROFESSIONAL_WRITING_QUESTIONS,
+  DAY_1_BUSINESS_COMMUNICATION_QUESTIONS,
+  DAY_1_EMOTIONAL_INTELLIGENCE_QUESTIONS,
+} from './professionalAssessmentsDay1';
+import {
+  DAY_3_PROFESSIONAL_WRITING_QUESTIONS,
+  DAY_3_BUSINESS_COMMUNICATION_QUESTIONS,
+  DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
+} from './professionalAssessmentsDay3';
+
 export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
   dayNumber: 1,
   title: 'Day 1: Foundation & Core Placement Diagnostic',
-  tagline: '11 Domains • 10 MCQs each • 110 Curated Problems',
-  description: 'Rigorous 10-MCQ placement-oriented mock tests across all technical, data, AI, and reasoning competencies for Day 1. Complete each domain to establish your baseline placement readiness.',
+  tagline: '14 Domains • 10 MCQs each • 140 Curated Problems',
+  description: 'Rigorous 10-MCQ placement-oriented mock tests across all technical, data, AI, professional communication, and reasoning competencies for Day 1. Complete each domain to establish your baseline placement readiness.',
   status: 'active',
-  totalQuestions: 110,
+  totalQuestions: 140,
   domains: [
     {
       category: 'verbal',
@@ -1577,6 +1589,33 @@ export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
       tagline: 'STAR Method, Conflict & Ownership',
       targetRoles: ['SDE, Product, Consulting & Analyst Roles'],
       questions: DAY_1_SOFT_SKILLS_QUESTIONS,
+    },
+    {
+      category: 'professional_writing',
+      domainName: 'Professional Writing',
+      shortCode: 'PW',
+      badgeColor: '#06B6D4',
+      tagline: 'BLUF Emails, Post-Mortems & Technical Specs',
+      targetRoles: ['Software Engineers, Technical Leads, Analysts'],
+      questions: DAY_1_PROFESSIONAL_WRITING_QUESTIONS,
+    },
+    {
+      category: 'business_communication',
+      domainName: 'Business Communication',
+      shortCode: 'BC',
+      badgeColor: '#8B5CF6',
+      tagline: 'Minto Pyramid, Stakeholder Alignment & Negotiation',
+      targetRoles: ['Product Managers, Consultants, Client Solutions'],
+      questions: DAY_1_BUSINESS_COMMUNICATION_QUESTIONS,
+    },
+    {
+      category: 'emotional_intelligence',
+      domainName: 'Emotional Intelligence (EQ)',
+      shortCode: 'EQ',
+      badgeColor: '#EC4899',
+      tagline: 'Self-Regulation, Active Listening & Conflict De-escalation',
+      targetRoles: ['All Corporate & Engineering Leadership Tracks'],
+      questions: DAY_1_EMOTIONAL_INTELLIGENCE_QUESTIONS,
     },
     {
       category: 'coding',
@@ -1662,24 +1701,59 @@ export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
   ],
 };
 
-import { DAY_2_MOCK_TEST_PACK, ALL_DAY_2_QUESTIONS } from './day2MockTests';
-
-// Extensible Day Registry: Day 1 & Day 2 active; Day 3 structured and ready
+// Extensible Day Registry: Day 1, Day 2 & Day 3 active with all 14 Domains
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
   DAY_2_MOCK_TEST_PACK,
   {
     dayNumber: 3,
-    title: 'Day 3: Speed & High-Pressure Placement Simulation',
-    tagline: '11 Domains • 10 MCQs each • Scheduled Next',
-    description: 'Day 3 placement suite focusing on rapid elimination techniques, boundary corner cases, and high-frequency company interview questions.',
-    status: 'upcoming',
-    totalQuestions: 110,
-    domains: DAY_2_MOCK_TEST_PACK.domains.map(d => ({
-      ...d,
-      tagline: `Day 3: Mastery ${d.domainName} Suite`,
-      questions: d.questions, // Can be updated as user adds Day 3 questions daily
-    })),
+    title: 'Day 3: Speed, Strategy & High-Stakes Placement Simulation',
+    tagline: '14 Domains • 10 MCQs each • 140 Curated Problems',
+    description: 'Day 3 placement suite focusing on high-pressure technical execution, executive communication, contractual SLAs, incident de-escalation, and speed problem solving.',
+    status: 'active',
+    totalQuestions: 140,
+    domains: [
+      ...DAY_2_MOCK_TEST_PACK.domains
+        .filter(
+          (d) =>
+            !['professional_writing', 'business_communication', 'emotional_intelligence'].includes(d.category)
+        )
+        .map((d) => ({
+          ...d,
+          tagline: `Day 3: Speed & High-Pressure ${d.domainName} Round`,
+          questions: d.questions.map((q) => ({
+            ...q,
+            id: `d3_${q.id.replace(/^d[12]_/, '')}`,
+          })),
+        })),
+      {
+        category: 'professional_writing',
+        domainName: 'Professional Writing',
+        shortCode: 'PW',
+        badgeColor: '#06B6D4',
+        tagline: 'SLA Breach Notices, Executive Memos & Audit Runbooks',
+        targetRoles: ['Senior Engineers, Engineering Managers, Consultants'],
+        questions: DAY_3_PROFESSIONAL_WRITING_QUESTIONS,
+      },
+      {
+        category: 'business_communication',
+        domainName: 'Business Communication',
+        shortCode: 'BC',
+        badgeColor: '#8B5CF6',
+        tagline: 'BATNA Negotiation, Crisis PR & Cross-Org Leadership',
+        targetRoles: ['Directors, Product Leads, Tech Consultants'],
+        questions: DAY_3_BUSINESS_COMMUNICATION_QUESTIONS,
+      },
+      {
+        category: 'emotional_intelligence',
+        domainName: 'Emotional Intelligence (EQ)',
+        shortCode: 'EQ',
+        badgeColor: '#EC4899',
+        tagline: 'Crisis Leadership, Radical Candor & Inclusive Facilitation',
+        targetRoles: ['Engineering Leads, Project Directors, Executive Tracks'],
+        questions: DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
+      },
+    ],
   },
 ];
 

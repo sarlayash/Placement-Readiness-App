@@ -9,7 +9,7 @@ import {
 export interface DomainXPItem {
   id: string;
   name: string;
-  category: 'Aptitude & Core' | 'Technical & DSA' | 'Data & Analytics' | 'Artificial Intelligence';
+  category: 'Aptitude & Core' | 'Technical & DSA' | 'Data & Analytics' | 'Artificial Intelligence' | 'Professional & Soft Skills';
   earnedXP: number;
   maxXP: number;
   accuracyRate: number; // percentage e.g. 88
@@ -224,6 +224,39 @@ export function generateLetterOfRecommendationData(
       strengthRemark: 'Articulates autonomous ReAct cycles, tool execution boundaries, and supervisor-worker hierarchical delegation architectures.',
       skillsIncluded: ['Autonomous Tools', 'ReAct Protocol', 'Hierarchical Orchestration'],
     },
+    {
+      id: 'd_prof_writing',
+      name: 'Professional Writing & Technical Specs',
+      category: 'Professional & Soft Skills',
+      earnedXP: Math.round(415 * baseFactor + 45),
+      maxXP: 500,
+      accuracyRate: Math.min(99, Math.round(avgTestAccuracy * 0.95 + 4)),
+      masteryTier: 'Tier-1 Elite',
+      strengthRemark: 'Synthesizes high-stakes executive memos (BLUF), post-mortems, RFC design documents, and contractual SLAs with exceptional clarity.',
+      skillsIncluded: ['BLUF Executive Memos', 'Incident Post-Mortems', 'Technical RFCs', 'SLA Documentation'],
+    },
+    {
+      id: 'd_biz_comm',
+      name: 'Business Communication & Negotiation',
+      category: 'Professional & Soft Skills',
+      earnedXP: Math.round(420 * baseFactor + 45),
+      maxXP: 500,
+      accuracyRate: Math.min(98, Math.round(avgTestAccuracy * 0.94 + 5)),
+      masteryTier: 'Tier-1 Elite',
+      strengthRemark: 'Applies Minto Pyramid principles, resolves cross-functional scope disputes, and negotiates principled BATNA compromises.',
+      skillsIncluded: ['Minto Pyramid', 'Stakeholder Mapping', 'Scope Negotiation', 'Crisis Briefings'],
+    },
+    {
+      id: 'd_eq',
+      name: 'Emotional Intelligence (EQ) & Leadership',
+      category: 'Professional & Soft Skills',
+      earnedXP: Math.round(430 * baseFactor + 50),
+      maxXP: 500,
+      accuracyRate: Math.min(99, Math.round(avgTestAccuracy * 0.97 + 3)),
+      masteryTier: 'Tier-1 Elite',
+      strengthRemark: 'Exhibits self-regulation in high-pressure outages, promotes psychological safety, and practices active empathy across distributed squads.',
+      skillsIncluded: ['Self-Regulation', 'Active Listening', 'Psychological Safety', 'Crisis Composure'],
+    },
   ];
 
   const totalEarnedXP = domainXPList.reduce((acc, cur) => acc + cur.earnedXP, 0);
@@ -241,8 +274,8 @@ export function generateLetterOfRecommendationData(
       title: 'Core Domain Versatility & Modern AI Fluency',
       highlight: 'Full-Spectrum Technical Competence',
       description:
-        'Combines foundational engineering rigor (Core CS, DBMS, Quantitative Analysis) with vanguard proficiency in Generative and Agentic AI architectures.',
-      metrics: `${totalEarnedXP} Total Domain XP across 11 Assessed Categories`,
+        'Combines foundational engineering rigor (Core CS, DBMS, Quantitative Analysis) with vanguard proficiency in Generative and Agentic AI architectures, professional communication, and emotional intelligence.',
+      metrics: `${totalEarnedXP} Total Domain XP across 14 Assessed Categories`,
     },
     {
       title: 'Defensive Engineering & Defensive Verification',

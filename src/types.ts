@@ -36,6 +36,9 @@ export interface StudentProfile {
 export type AssessmentCategory =
   | 'verbal'
   | 'soft_skills'
+  | 'professional_writing'
+  | 'business_communication'
+  | 'emotional_intelligence'
   | 'coding'
   | 'excel'
   | 'sql'

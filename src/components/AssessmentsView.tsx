@@ -240,7 +240,7 @@ export function AssessmentsView({
     const pack = ALL_DAY_MOCK_TESTS.find((p) => p.dayNumber === dayNumber) || ALL_DAY_MOCK_TESTS[0];
     const sample11 = pack.domains.map((d) => d.questions[0]).filter(Boolean);
     setCustomTestPool(sample11);
-    setCustomTestTitle(`Day ${dayNumber} • Cross-Domain Placement Diagnostic (11 MCQs)`);
+    setCustomTestTitle(`Day ${dayNumber} • Cross-Domain Placement Diagnostic (${sample11.length} MCQs)`);
     setActiveDayDomainKey(`day_${dayNumber}_diagnostic`);
     setSelectedAnswers({});
     setMarkedForReview({});
@@ -473,6 +473,9 @@ export function AssessmentsView({
     { id: 'all', label: 'All Modules', icon: Sparkles, count: questions.length },
     { id: 'verbal', label: 'Verbal Ability', icon: MessageSquare, count: questions.filter(q => q.category === 'verbal').length },
     { id: 'soft_skills', label: 'Soft Skills', icon: Award, count: questions.filter(q => q.category === 'soft_skills').length },
+    { id: 'professional_writing', label: 'Professional Writing', icon: BookOpen, count: questions.filter(q => q.category === 'professional_writing').length },
+    { id: 'business_communication', label: 'Business Communication', icon: MessageSquare, count: questions.filter(q => q.category === 'business_communication').length },
+    { id: 'emotional_intelligence', label: 'Emotional Intelligence (EQ)', icon: Award, count: questions.filter(q => q.category === 'emotional_intelligence').length },
     { id: 'coding', label: 'Coding MCQs', icon: Code2, count: questions.filter(q => q.category === 'coding').length },
     { id: 'excel', label: 'Excel Modeling', icon: FileSpreadsheet, count: questions.filter(q => q.category === 'excel').length },
     { id: 'sql', label: 'SQL Queries', icon: Database, count: questions.filter(q => q.category === 'sql').length },
