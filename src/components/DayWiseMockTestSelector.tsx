@@ -52,7 +52,7 @@ interface DayWiseMockTestSelectorProps {
   completedTestsHistory?: Record<string, { score: number; total: number; percentage: number }>;
 }
 
-type TrackFilterCluster = 'all' | 'specialized' | 'cloud_infra' | 'cyber_data' | 'ai_automation' | 'aptitude_soft';
+type TrackFilterCluster = 'all' | 'specialized' | 'core_infra' | 'cloud_infra' | 'cyber_data' | 'ai_automation' | 'aptitude_soft';
 
 export function DayWiseMockTestSelector({
   onStartDomainTest,
@@ -146,7 +146,18 @@ export function DayWiseMockTestSelector({
   const filteredDomains = useMemo(() => {
     return currentPack.domains.filter((domain) => {
       // Filter by cluster
-      if (trackCluster === 'specialized') {
+      if (trackCluster === 'core_infra') {
+        const coreInfra: AssessmentCategory[] = [
+          'windows_endpoint',
+          'linux_automation',
+          'cloud_platform',
+          'network_engineering',
+          'cybersecurity_iam',
+          'database_platforms',
+          'observability_aiops',
+        ];
+        if (!coreInfra.includes(domain.category)) return false;
+      } else if (trackCluster === 'specialized') {
         if (!specializedCategories.includes(domain.category)) return false;
       } else if (trackCluster === 'cloud_infra') {
         const cloudInfra: AssessmentCategory[] = ['cloud_platform', 'linux_automation', 'windows_endpoint', 'network_engineering'];
@@ -409,7 +420,8 @@ export function DayWiseMockTestSelector({
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
           {[
             { id: 'all', label: `All Tracks (${currentPack.domains.length})` },
-            { id: 'specialized', label: '🔥 10 Specialized Tracks' },
+            { id: 'core_infra', label: '⭐ Core 7 Infra & Ops' },
+            { id: 'specialized', label: '🔥 All 10 Specialized Systems' },
             { id: 'cloud_infra', label: 'Cloud & Infrastructure' },
             { id: 'cyber_data', label: 'Cybersecurity & Data' },
             { id: 'ai_automation', label: 'AI & Automations' },

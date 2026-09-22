@@ -77,7 +77,7 @@ export function AssessmentsView({
   const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules'>('day_wise');
   const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
   const [moduleSearch, setModuleSearch] = useState<string>('');
-  const [moduleClusterFilter, setModuleClusterFilter] = useState<'all' | 'specialized' | 'cloud' | 'cyber_data' | 'ai' | 'aptitude'>('all');
+  const [moduleClusterFilter, setModuleClusterFilter] = useState<'all' | 'core_infra' | 'specialized' | 'cloud' | 'cyber_data' | 'ai' | 'aptitude'>('all');
 
   // Day-wise custom test state
   const [customTestPool, setCustomTestPool] = useState<AptitudeQuestion[] | null>(null);
@@ -586,7 +586,10 @@ export function AssessmentsView({
             <div className="flex bg-black p-1 rounded-2xl border border-neutral-800 shadow-md">
               <button
                 id="assessment-mode-daywise-btn"
-                onClick={() => setAssessmentMode('day_wise')}
+                onClick={() => {
+                  setAssessmentMode('day_wise');
+                  setCustomTestPool(null);
+                }}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   assessmentMode === 'day_wise'
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
@@ -598,7 +601,10 @@ export function AssessmentsView({
               </button>
               <button
                 id="assessment-mode-modules-btn"
-                onClick={() => setAssessmentMode('modules')}
+                onClick={() => {
+                  setAssessmentMode('modules');
+                  setCustomTestPool(null);
+                }}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   assessmentMode === 'modules'
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
@@ -663,7 +669,8 @@ export function AssessmentsView({
                 <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
                   {[
                     { id: 'all', label: 'All Tracks' },
-                    { id: 'specialized', label: '🔥 10 Specialized Systems' },
+                    { id: 'core_infra', label: '⭐ Core 7 Infra & Ops' },
+                    { id: 'specialized', label: '🔥 All 10 Specialized Systems' },
                     { id: 'cloud', label: 'Platform & Coding' },
                     { id: 'cyber_data', label: 'Cyber, DB & Data' },
                     { id: 'ai', label: 'AI, GenAI & Agents' },
@@ -691,7 +698,20 @@ export function AssessmentsView({
                   {modulesList
                     .filter((m) => {
                       if (moduleClusterFilter !== 'all' && m.id !== 'all') {
-                        if (m.cluster !== moduleClusterFilter) return false;
+                        if (moduleClusterFilter === 'core_infra') {
+                          const core7: string[] = [
+                            'windows_endpoint',
+                            'linux_automation',
+                            'cloud_platform',
+                            'network_engineering',
+                            'cybersecurity_iam',
+                            'database_platforms',
+                            'observability_aiops',
+                          ];
+                          if (!core7.includes(m.id)) return false;
+                        } else if (m.cluster !== moduleClusterFilter) {
+                          return false;
+                        }
                       }
                       if (moduleSearch.trim()) {
                         const q = moduleSearch.toLowerCase();
