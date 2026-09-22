@@ -34,6 +34,12 @@ export function createDefaultProfile(user: {
     streakDays: 1,
     avatarSeed: user.displayName || 'Learner',
     photoURL: user.photoURL || undefined,
+    upiId: '',
+    mobileNumber: '',
+    earnedXp: 0,
+    redeemedXp: 0,
+    totalInrEarned: 0,
+    welcomeBonusAwarded: false,
   };
 }
 

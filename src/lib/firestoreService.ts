@@ -21,6 +21,7 @@ import {
   AptitudeAssessmentResult,
   PersonalizedRoadmap,
   LearnerActivityEvent,
+  RewardRedemption,
 } from '../types';
 import {
   INITIAL_SKILLS,
@@ -57,6 +58,12 @@ export async function initializeUserAccount(user: User): Promise<StudentProfile>
         streakDays: data.streakDays || 1,
         avatarSeed: data.avatarSeed || user.displayName || 'Learner',
         photoURL: data.photoURL || user.photoURL || undefined,
+        upiId: data.upiId || '',
+        mobileNumber: data.mobileNumber || '',
+        earnedXp: data.earnedXp || 0,
+        redeemedXp: data.redeemedXp || 0,
+        totalInrEarned: data.totalInrEarned || 0,
+        welcomeBonusAwarded: data.welcomeBonusAwarded || false,
       };
     }
 
@@ -129,6 +136,12 @@ export function subscribeToUserProfile(
           streakDays: data.streakDays || 1,
           avatarSeed: data.avatarSeed || 'Learner',
           photoURL: data.photoURL,
+          upiId: data.upiId || '',
+          mobileNumber: data.mobileNumber || '',
+          earnedXp: data.earnedXp || 0,
+          redeemedXp: data.redeemedXp || 0,
+          totalInrEarned: data.totalInrEarned || 0,
+          welcomeBonusAwarded: data.welcomeBonusAwarded || false,
         });
       }
     },
@@ -471,4 +484,85 @@ export async function getLearnerPerformanceDetails(userId: string): Promise<{
     return { aptitudeResults: [], codingSubmissions: [], badges: [], skills: [] };
   }
 }
+
+/**
+ * Creates a new UPI Cashout / Redemption request in Firestore.
+ */
+export async function createRedemptionRequest(redemption: RewardRedemption): Promise<void> {
+  const redRef = doc(db, 'redemptions', redemption.id);
+  try {
+    await setDoc(redRef, redemption);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `redemptions/${redemption.id}`);
+  }
+}
+
+/**
+ * Subscribes to real-time redemptions for a specific learner.
+ */
+export function subscribeToUserRedemptions(
+  userId: string,
+  onData: (redemptions: RewardRedemption[]) => void
+) {
+  const redCollection = collection(db, 'redemptions');
+  const q = query(redCollection, orderBy('timestamp', 'desc'), limit(50));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const redemptions: RewardRedemption[] = [];
+      snap.forEach((d) => {
+        const item = d.data() as RewardRedemption;
+        if (item.userId === userId) {
+          redemptions.push(item);
+        }
+      });
+      onData(redemptions);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, 'redemptions');
+    }
+  );
+}
+
+/**
+ * Subscribes to all real-time redemptions for the Admin Command Center.
+ */
+export function subscribeToAllRedemptions(
+  onData: (redemptions: RewardRedemption[]) => void
+) {
+  const redCollection = collection(db, 'redemptions');
+  const q = query(redCollection, orderBy('timestamp', 'desc'), limit(100));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const redemptions: RewardRedemption[] = [];
+      snap.forEach((d) => redemptions.push(d.data() as RewardRedemption));
+      onData(redemptions);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, 'redemptions');
+    }
+  );
+}
+
+/**
+ * Updates the status of a redemption request (e.g. approved, paid, rejected).
+ */
+export async function updateRedemptionStatus(
+  redemptionId: string,
+  status: RewardRedemption['status'],
+  note?: string
+): Promise<void> {
+  const redRef = doc(db, 'redemptions', redemptionId);
+  try {
+    await updateDoc(redRef, {
+      status,
+      ...(note ? { note } : {}),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `redemptions/${redemptionId}`);
+  }
+}
+
 

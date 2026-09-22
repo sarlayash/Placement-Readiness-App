@@ -21,6 +21,11 @@ import {
   ArrowUpRight,
   FileText,
   Lock,
+  Wallet,
+  Coins,
+  QrCode,
+  Phone,
+  Gift,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -28,11 +33,14 @@ import {
   AptitudeAssessmentResult,
   CodingSubmission,
   Badge,
+  RewardRedemption,
 } from '../types';
 import {
   subscribeToAllLearners,
   subscribeToAllLearnerActivities,
   getLearnerPerformanceDetails,
+  subscribeToAllRedemptions,
+  updateRedemptionStatus,
 } from '../lib/firestoreService';
 
 interface AdminDashboardViewProps {
@@ -195,8 +203,10 @@ export function AdminDashboardView({
     badges: Badge[];
   } | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [redemptions, setRedemptions] = useState<RewardRedemption[]>([]);
+  const [updatingRedemptionId, setUpdatingRedemptionId] = useState<string | null>(null);
 
-  // Subscribe to live Firestore learners & activities
+  // Subscribe to live Firestore learners & activities & redemptions
   useEffect(() => {
     if (!isAdminAuthenticated) return;
 
@@ -208,11 +218,28 @@ export function AdminDashboardView({
       setLiveActivities(activities);
     });
 
+    const unsubRedemptions = subscribeToAllRedemptions((list) => {
+      setRedemptions(list);
+    });
+
     return () => {
       unsubLearners();
       unsubActivities();
+      unsubRedemptions();
     };
   }, [isAdminAuthenticated]);
+
+  // Handle updating redemption status
+  const handleUpdateStatus = async (redemptionId: string, status: 'completed' | 'rejected' | 'processing') => {
+    setUpdatingRedemptionId(redemptionId);
+    try {
+      await updateRedemptionStatus(redemptionId, status);
+    } catch (e) {
+      console.error('Failed to update redemption status:', e);
+    } finally {
+      setUpdatingRedemptionId(null);
+    }
+  };
 
   // Handle Admin Login submission
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -529,6 +556,147 @@ export function AdminDashboardView({
         </div>
       </div>
 
+      {/* Rewards & UPI Cashouts Management Console */}
+      <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-black">
+              <Gift className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-300 font-['Outfit',sans-serif]">
+                UPI Rewards & Cash Payouts Command Center
+              </h3>
+              <p className="text-[10px] text-neutral-400">
+                Rule: 500 XP = ₹100 INR • ₹200 Welcome Bonus on 500 XP
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+            {redemptions.length} Total Requests
+          </span>
+        </div>
+
+        {/* Payout Summary Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800">
+            <span className="text-[10px] text-neutral-400 block font-semibold">Total Requested</span>
+            <span className="text-sm font-black text-white">
+              ₹{redemptions.reduce((acc, r) => acc + (r.inrAmount || 0), 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+
+          <div className="bg-neutral-950 p-2.5 rounded-xl border border-emerald-500/30">
+            <span className="text-[10px] text-emerald-400 block font-semibold">Total Paid Out</span>
+            <span className="text-sm font-black text-emerald-300">
+              ₹{redemptions.filter((r) => r.status === 'completed').reduce((acc, r) => acc + (r.inrAmount || 0), 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+
+          <div className="bg-neutral-950 p-2.5 rounded-xl border border-amber-500/30">
+            <span className="text-[10px] text-amber-400 block font-semibold">Pending Approval</span>
+            <span className="text-sm font-black text-amber-300">
+              {redemptions.filter((r) => r.status === 'pending').length} requests (₹
+              {redemptions.filter((r) => r.status === 'pending').reduce((acc, r) => acc + (r.inrAmount || 0), 0).toLocaleString('en-IN')})
+            </span>
+          </div>
+
+          <div className="bg-neutral-950 p-2.5 rounded-xl border border-sky-500/30">
+            <span className="text-[10px] text-sky-400 block font-semibold">Welcome Bonuses</span>
+            <span className="text-sm font-black text-sky-300">
+              {redemptions.filter((r) => r.type === 'welcome_bonus').length} claimed
+            </span>
+          </div>
+        </div>
+
+        {/* Redemptions Table / List */}
+        {redemptions.length === 0 ? (
+          <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-center text-xs text-neutral-400">
+            No UPI redemption requests submitted yet. When learners redeem 500 XP or claim their ₹200 welcome bonus, their payouts appear here in real-time.
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {redemptions.map((red) => (
+              <div
+                key={red.id}
+                className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-white text-sm">
+                      ₹{red.inrAmount} INR
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                      {red.type === 'welcome_bonus' ? '🎁 ₹200 Welcome Bonus' : `⚡ ${red.xpRedeemed} XP Redeemed`}
+                    </span>
+                    <span className="text-[10px] text-neutral-500 font-mono">
+                      Ref: {red.transactionRef}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[11px] text-neutral-300 flex-wrap">
+                    <span className="font-semibold text-sky-300">{red.userName || 'Learner'}</span>
+                    <span className="text-neutral-500">•</span>
+                    <span className="text-neutral-400">{red.userEmail}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-[11px] text-neutral-400 font-mono flex-wrap">
+                    <span className="flex items-center gap-1 text-amber-300">
+                      <QrCode className="w-3 h-3" />
+                      <span>UPI: {red.upiId}</span>
+                    </span>
+                    {red.mobileNumber && (
+                      <span className="flex items-center gap-1 text-slate-300">
+                        <Phone className="w-3 h-3" />
+                        <span>+91 {red.mobileNumber}</span>
+                      </span>
+                    )}
+                    <span className="text-[10px] text-neutral-500">
+                      {new Date(red.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-center">
+                  <span
+                    className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg border ${
+                      red.status === 'completed'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : red.status === 'rejected'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    }`}
+                  >
+                    {red.status === 'completed' ? 'Paid via UPI' : red.status === 'rejected' ? 'Rejected' : 'Pending'}
+                  </span>
+
+                  {red.status === 'pending' && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={updatingRedemptionId === red.id}
+                        onClick={() => handleUpdateStatus(red.id, 'completed')}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-black uppercase transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {updatingRedemptionId === red.id ? 'Saving...' : 'Mark Paid'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updatingRedemptionId === red.id}
+                        onClick={() => handleUpdateStatus(red.id, 'rejected')}
+                        className="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[11px] font-black transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Live Activity Stream (Recent test results, bonus wheel spins, code submissions) */}
       <div className="bg-black border-2 border-amber-500/30 rounded-2xl p-4 shadow-lg">
         <div className="flex items-center justify-between mb-3">
@@ -770,6 +938,27 @@ export function AdminDashboardView({
                 <span className="text-[10px] text-neutral-400 block font-bold">Target Company</span>
                 <span className="text-xs font-bold text-amber-300 block truncate mt-1">
                   {inspectingLearner.targetCompanyTier.split(' ')[0]}
+                </span>
+              </div>
+            </div>
+
+            {/* Learner UPI & Rewards Credentials */}
+            <div className="p-3 rounded-2xl bg-neutral-950 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div>
+                <span className="text-[10px] text-amber-300 font-bold block uppercase tracking-wider">
+                  Registered UPI & Cashout Destination
+                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="font-mono text-white font-bold">{inspectingLearner.upiId || 'No UPI ID saved'}</span>
+                  {inspectingLearner.mobileNumber && (
+                    <span className="text-neutral-400 font-mono text-[11px]">(+91 {inspectingLearner.mobileNumber})</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-neutral-400 block font-semibold">Lifetime Earned</span>
+                <span className="text-sm font-black text-emerald-400">
+                  ₹{inspectingLearner.totalInrEarned || 0} INR
                 </span>
               </div>
             </div>

@@ -18,6 +18,11 @@ import {
   FileText,
   Award,
   TrendingUp,
+  Wallet,
+  Phone,
+  QrCode,
+  ArrowRight,
+  Gift,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -33,6 +38,7 @@ interface ProfileViewProps {
   onSignOut?: () => void;
   onOpenLOR?: () => void;
   onOpenCertificate?: () => void;
+  onOpenRewards?: () => void;
   isSaving?: boolean;
 }
 
@@ -43,6 +49,7 @@ export function ProfileView({
   onSignOut,
   onOpenLOR,
   onOpenCertificate,
+  onOpenRewards,
   isSaving = false,
 }: ProfileViewProps) {
   const [formData, setFormData] = useState<StudentProfile>(profile);
@@ -77,12 +84,14 @@ export function ProfileView({
     if (formData.college.trim()) pts += 15;
     if (formData.degree.trim()) pts += 10;
     if (formData.cgpa > 0) pts += 10;
-    if (formData.targetRole) pts += 15;
+    if (formData.targetRole) pts += 10;
     if (formData.targetCompanyTier) pts += 10;
     if (formData.githubUrl && formData.githubUrl.length > 5) pts += 10;
     if (formData.linkedinUrl && formData.linkedinUrl.length > 5) pts += 5;
-    if (formData.skills.length >= 5) pts += 10;
-    return pts;
+    if (formData.skills.length >= 3) pts += 5;
+    if (formData.upiId && formData.upiId.trim().length > 4) pts += 10; // UPI reward bonus
+    if (formData.mobileNumber && formData.mobileNumber.trim().length >= 10) pts += 10; // Mobile bonus
+    return Math.min(100, pts);
   };
 
   const completionPct = calculateCompletion();
@@ -478,6 +487,101 @@ export function ProfileView({
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="https://linkedin.com/in/username"
               />
+            </div>
+
+            {/* UPI & Cash Rewards Payout Section (500 XP = 100 INR) */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-emerald-500/10 border-2 border-amber-500/30 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 font-['Outfit',sans-serif]">
+                      Cash Rewards & UPI Payout Credentials
+                    </h4>
+                    <p className="text-[10px] text-slate-400">
+                      500 XP = ₹100 INR • Direct instant transfer
+                    </p>
+                  </div>
+                </div>
+
+                {onOpenRewards && (
+                  <button
+                    type="button"
+                    onClick={onOpenRewards}
+                    className="flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow-sm transition-all cursor-pointer"
+                  >
+                    <span>Rewards Center</span>
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </button>
+                )}
+              </div>
+
+              {/* UPI ID Input */}
+              <div>
+                <label className="text-slate-300 block mb-1 font-bold text-xs flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5 text-amber-400" />
+                    <span>UPI ID (VPA) for Cash Redemptions</span>
+                  </span>
+                  {formData.upiId && formData.upiId.includes('@') && (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> Valid VPA
+                    </span>
+                  )}
+                </label>
+                <input
+                  id="profile-upi-id-input"
+                  type="text"
+                  value={formData.upiId || ''}
+                  onChange={(e) => setFormData({ ...formData, upiId: e.target.value.trim() })}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 transition-all placeholder:text-slate-600"
+                  placeholder="e.g. yourname@okhdfcbank, 9876543210@paytm, name@upi"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Cashouts are transferred directly to this UPI VPA upon 500 XP redemption.
+                </p>
+              </div>
+
+              {/* Mobile Number Input */}
+              <div>
+                <label className="text-slate-300 block mb-1 font-bold text-xs flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Mobile Number (Linked with UPI)</span>
+                  </span>
+                  {formData.mobileNumber && formData.mobileNumber.replace(/\D/g, '').length === 10 && (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> 10-Digit Mobile
+                    </span>
+                  )}
+                </label>
+                <div className="flex gap-2">
+                  <span className="px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs font-bold flex items-center">
+                    🇮🇳 +91
+                  </span>
+                  <input
+                    id="profile-mobile-number-input"
+                    type="tel"
+                    maxLength={10}
+                    value={formData.mobileNumber || ''}
+                    onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    className="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 transition-all placeholder:text-slate-600"
+                    placeholder="10-digit mobile number"
+                  />
+                </div>
+              </div>
+
+              {/* Welcome Bonus Notice */}
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-slate-300 text-[11px]">
+                <Gift className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-amber-300">Sign-Up Milestone:</strong> Each new learner gets an automatic{' '}
+                  <strong className="text-emerald-300">₹200 INR</strong> bonus once you sign up and reach{' '}
+                  <strong className="text-sky-300">500 XP</strong>!
+                </div>
+              </div>
             </div>
 
             {/* Skill Tags */}

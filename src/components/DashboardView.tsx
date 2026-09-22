@@ -12,37 +12,47 @@ import {
   Download,
   FileText,
   ShieldCheck,
+  Gift,
+  Wallet,
+  Coins,
+  QrCode,
 } from 'lucide-react';
 import {
   StudentProfile,
   ReadinessScoreBreakdown,
   Badge,
 } from '../types';
+import { computeRewardsSummary, formatINR } from '../utils/rewardsCalculator';
 
 interface DashboardViewProps {
   profile: StudentProfile;
   readiness: ReadinessScoreBreakdown;
   badges: Badge[];
+  totalXp?: number;
   onNavigateToTab: (tab: 'assessments' | 'skills' | 'roadmap' | 'badges' | 'profile') => void;
   onStartAptitude: () => void;
   onStartCoding: () => void;
   onOpenCompanyModal: () => void;
   onOpenCertificate?: () => void;
   onOpenLOR?: () => void;
+  onOpenRewards?: () => void;
 }
 
 export function DashboardView({
   profile,
   readiness,
   badges,
+  totalXp = 500,
   onNavigateToTab,
   onStartAptitude,
   onStartCoding,
   onOpenCompanyModal,
   onOpenCertificate,
   onOpenLOR,
+  onOpenRewards,
 }: DashboardViewProps) {
   const earnedBadges = badges.filter((b) => b.unlocked);
+  const rewardsSummary = computeRewardsSummary(totalXp, profile);
 
   return (
     <div className="space-y-4 pb-20 max-w-lg mx-auto text-slate-100">
@@ -173,6 +183,119 @@ export function DashboardView({
               {readiness.pri?.breakdown.streakConsistency ?? 14} <span className="text-[10px] text-slate-500">/15</span>
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Rewards & Cash Earnings Card (500 XP = 100 INR + 200 INR Welcome Bonus) */}
+      <div
+        id="dashboard-rewards-card"
+        className="relative overflow-hidden bg-gradient-to-br from-[#0e1726] via-[#0b1220] to-[#040816] border-2 border-amber-500/40 rounded-2xl p-4 shadow-xl transition-all"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400" />
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20 shrink-0">
+              <Gift className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white font-['Outfit',sans-serif]">
+                  Rewards & UPI Cashouts
+                </h3>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  500 XP = ₹100 INR
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Direct bank transfers sent to your registered UPI ID
+              </p>
+            </div>
+          </div>
+
+          {onOpenRewards && (
+            <button
+              id="dashboard-open-rewards-btn"
+              onClick={onOpenRewards}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/25 cursor-pointer active:scale-95"
+            >
+              <span>Redeem Cash</span>
+              <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+            </button>
+          )}
+        </div>
+
+        {/* 3 Metric Pills */}
+        <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/80">
+          <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2 text-center">
+            <span className="text-[10px] text-slate-400 block font-semibold">Available XP</span>
+            <span className="text-xs sm:text-sm font-black text-amber-300">
+              {rewardsSummary.availableXp} <span className="text-[10px] text-slate-400">XP</span>
+            </span>
+          </div>
+
+          <div className="bg-slate-950/70 border border-emerald-500/30 rounded-xl p-2 text-center">
+            <span className="text-[10px] text-emerald-400 block font-semibold">Redeemable</span>
+            <span className="text-xs sm:text-sm font-black text-emerald-300">
+              {formatINR(rewardsSummary.redeemableInr)}
+            </span>
+          </div>
+
+          <div className="bg-slate-950/70 border border-sky-500/30 rounded-xl p-2 text-center">
+            <span className="text-[10px] text-sky-400 block font-semibold">Lifetime Earned</span>
+            <span className="text-xs sm:text-sm font-black text-sky-300">
+              {formatINR(rewardsSummary.totalInrEarned)}
+            </span>
+          </div>
+        </div>
+
+        {/* ₹200 Sign-Up Bonus Milestone Status */}
+        <div className="mt-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Coins className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="text-[11px]">
+              <span className="text-slate-200 font-bold block">
+                {rewardsSummary.welcomeBonusAwarded
+                  ? '₹200 Welcome Bonus Claimed!'
+                  : rewardsSummary.welcomeBonusEligible
+                  ? '🎉 500 XP Scored! ₹200 Welcome Bonus Ready to Claim!'
+                  : `₹200 Welcome Bonus: ${totalXp} / 500 XP scored`}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {rewardsSummary.welcomeBonusAwarded
+                  ? 'Credited to your UPI account'
+                  : 'Reach 500 XP to unlock your automatic ₹200 bonus'}
+              </span>
+            </div>
+          </div>
+
+          {onOpenRewards && !rewardsSummary.welcomeBonusAwarded && (
+            <button
+              onClick={onOpenRewards}
+              className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 cursor-pointer shrink-0"
+            >
+              {rewardsSummary.welcomeBonusEligible ? 'Claim ₹200' : 'View Goal'}
+            </button>
+          )}
+        </div>
+
+        {/* UPI ID Status snippet */}
+        <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-400 px-1">
+          <div className="flex items-center gap-1">
+            <QrCode className="w-3.5 h-3.5 text-amber-400" />
+            <span>
+              UPI: <strong className="text-slate-200 font-mono">{profile.upiId || 'Not Added Yet'}</strong>
+            </span>
+          </div>
+          {(!profile.upiId || !profile.mobileNumber) ? (
+            <button
+              onClick={() => onNavigateToTab('profile')}
+              className="text-amber-400 hover:text-amber-300 underline font-bold cursor-pointer"
+            >
+              + Add UPI in Profile
+            </button>
+          ) : (
+            <span className="text-emerald-400 font-bold">UPI Linked</span>
+          )}
         </div>
       </div>
 

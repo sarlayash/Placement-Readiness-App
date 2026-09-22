@@ -17,6 +17,7 @@ import { GoogleAuthScreen } from './components/GoogleAuthScreen';
 import { CertificateModal } from './components/CertificateModal';
 import { LetterOfRecommendationModal } from './components/LetterOfRecommendationModal';
 import { AdminDashboardView } from './components/AdminDashboardView';
+import { RewardsModal } from './components/RewardsModal';
 
 import {
   StudentProfile,
@@ -85,6 +86,7 @@ export default function App() {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [showLORModal, setShowLORModal] = useState(false);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
 
   // 1. Listen to Firebase Authentication State
   useEffect(() => {
@@ -154,6 +156,16 @@ export default function App() {
   const readiness = useMemo(() => {
     return calculateReadinessScore(profile, skills, codingSubmissions, aptitudeResults);
   }, [profile, skills, codingSubmissions, aptitudeResults]);
+
+  // 3b. Total XP computation for Rewards (500 XP = 100 INR, 200 INR Welcome Bonus at 500 XP)
+  const totalXp = useMemo(() => {
+    const computedFromActivities =
+      aptitudeResults.reduce((acc, r) => acc + (r.readinessPointsDelta || 50), 0) +
+      codingSubmissions.filter((s) => s.status === 'Accepted').length * 100 +
+      (profile.streakDays || 1) * 20;
+
+    return Math.max(profile.earnedXp || 0, computedFromActivities, 500);
+  }, [profile.earnedXp, profile.streakDays, aptitudeResults, codingSubmissions]);
 
   // 4. Genuine Badge Unlocking with Firestore Synchronization
   useEffect(() => {
@@ -442,6 +454,8 @@ export default function App() {
               setSelectedInspectionProfile(null);
               setShowLORModal(true);
             }}
+            onOpenRewards={() => setShowRewardsModal(true)}
+            totalXp={totalXp}
           />
         );
       case 'assessments':
@@ -492,6 +506,7 @@ export default function App() {
               setSelectedInspectionProfile(null);
               setShowLORModal(true);
             }}
+            onOpenRewards={() => setShowRewardsModal(true)}
           />
         );
       default:
@@ -546,6 +561,7 @@ export default function App() {
             setShowLORModal(true);
           }}
           onOpenAdmin={isMasterAdmin ? () => setIsAdminMode(!isAdminMode) : undefined}
+          onOpenRewards={() => setShowRewardsModal(true)}
           isAdminAuthenticated={isMasterAdmin}
         />
 
@@ -564,6 +580,19 @@ export default function App() {
           unlockedBadgeCount={unlockedBadgeCount}
         />
       </div>
+
+      {/* Rewards & UPI Cashout Modal */}
+      <RewardsModal
+        isOpen={showRewardsModal}
+        onClose={() => setShowRewardsModal(false)}
+        profile={profile}
+        totalXp={totalXp}
+        onProfileUpdated={(updated) => setProfile(updated)}
+        onNavigateToProfile={() => {
+          setShowRewardsModal(false);
+          setCurrentTab('profile');
+        }}
+      />
 
       {/* Company Cutoffs Intelligence Modal */}
       {showCompanyModal && (

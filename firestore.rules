@@ -27,6 +27,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Rewards & UPI Cashout Redemptions
+    match /redemptions/{redemptionId} {
+      allow read: if true;
+      allow create: if isValidId(redemptionId);
+      allow update: if true;
+      allow delete: if false;
+    }
+
     // User Profile Documents - readable for learners & admin dashboard real-time tracking
     match /users/{userId} {
       allow get, list: if true;

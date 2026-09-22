@@ -31,6 +31,13 @@ export interface StudentProfile {
   streakDays: number;
   avatarSeed: string;
   photoURL?: string;
+  // Rewards & UPI Payout credentials (500 XP = 100 INR)
+  upiId?: string;
+  mobileNumber?: string;
+  earnedXp?: number;
+  redeemedXp?: number;
+  totalInrEarned?: number;
+  welcomeBonusAwarded?: boolean;
 }
 
 export type AssessmentCategory =
@@ -233,7 +240,7 @@ export interface LearnerActivityEvent {
   userId: string;
   userName: string;
   userEmail: string;
-  type: 'assessment' | 'coding' | 'spinning_wheel' | 'badge' | 'login';
+  type: 'assessment' | 'coding' | 'spinning_wheel' | 'badge' | 'login' | 'reward_claimed';
   module: string;
   scorePercentage?: number;
   pointsDelta?: number;
@@ -258,4 +265,33 @@ export interface LearnerPerformanceSummary {
   lastActive: string;
   bonusesWon: number;
   badgesUnlocked: number;
+}
+
+export interface RewardRedemption {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  upiId: string;
+  mobileNumber: string;
+  xpRedeemed: number;
+  inrAmount: number;
+  type: 'xp_redemption' | 'welcome_bonus';
+  status: 'pending' | 'processing' | 'completed' | 'rejected';
+  timestamp: string;
+  transactionRef: string;
+  note?: string;
+}
+
+export interface RewardsSummary {
+  totalXp: number;
+  redeemedXp: number;
+  availableXp: number;
+  redeemableInr: number;
+  welcomeBonusEligible: boolean;
+  welcomeBonusAwarded: boolean;
+  welcomeBonusProgress: number;
+  totalInrEarned: number;
+  totalWithdrawableInr: number;
+  hasPaymentDetails: boolean;
 }

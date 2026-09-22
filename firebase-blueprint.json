@@ -21,6 +21,12 @@
         "resumeHeadline": { "type": "string" },
         "skills": { "type": "array" },
         "streakDays": { "type": "number" },
+        "upiId": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "earnedXp": { "type": "number" },
+        "redeemedXp": { "type": "number" },
+        "totalInrEarned": { "type": "number" },
+        "welcomeBonusAwarded": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -132,9 +138,34 @@
         "timestamp": { "type": "string" }
       },
       "required": ["id", "type", "timestamp"]
+    },
+    "RewardRedemption": {
+      "title": "RewardRedemption",
+      "description": "Learner XP to INR cashout redemption request via UPI",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "upiId": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "xpRedeemed": { "type": "number" },
+        "inrAmount": { "type": "number" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "transactionRef": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "userId", "upiId", "mobileNumber", "inrAmount", "status"]
     }
   },
   "firestore": {
+    "/redemptions/{redemptionId}": {
+      "schema": "RewardRedemption",
+      "description": "Learner reward cash redemption requests sent via UPI"
+    },
     "/learnerActivity/{activityId}": {
       "schema": "LearnerActivity",
       "description": "Live streaming learner assessment events for real-time tracking"

@@ -1,6 +1,6 @@
 {
   "name": "Student Placement Intelligence Platform",
-  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive Day-wise assessments covering placement aptitude and 10 specialized engineering domains (Cloud, Linux, Cybersecurity, Network, Observability, ServiceNow, AI Architecture), Placement Readiness Index (PRI), verified badges, certificates, and downloadable official Letter of Recommendation.",
+  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive Day-wise assessments covering placement aptitude and 10 specialized engineering domains (Cloud, Linux, Cybersecurity, Network, Observability, ServiceNow, AI Architecture), direct UPI cash rewards (500 XP = 100 INR & 200 INR new learner welcome bonus), Placement Readiness Index (PRI), verified badges, certificates, and downloadable official Letter of Recommendation.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

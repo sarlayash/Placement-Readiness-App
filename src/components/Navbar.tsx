@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles, ShieldAlert, Shield, FileText } from 'lucide-react';
+import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles, ShieldAlert, Shield, FileText, Gift } from 'lucide-react';
 import { StudentProfile } from '../types';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
   onOpenCertificate?: () => void;
   onOpenLOR?: () => void;
   onOpenAdmin?: () => void;
+  onOpenRewards?: () => void;
   isAdminAuthenticated?: boolean;
 }
 
@@ -22,6 +23,7 @@ export function Navbar({
   onOpenCertificate,
   onOpenLOR,
   onOpenAdmin,
+  onOpenRewards,
   isAdminAuthenticated,
 }: NavbarProps) {
   return (
@@ -67,6 +69,19 @@ export function Navbar({
             <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
             <span>PRS <strong className="text-sky-300">{readinessScore}</strong></span>
           </div>
+
+          {/* Rewards & UPI Cashouts Pill */}
+          {onOpenRewards && (
+            <button
+              id="nav-rewards-btn"
+              onClick={onOpenRewards}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-500/30 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-500/40 border border-amber-400/50 text-amber-300 text-xs font-black cursor-pointer shadow-sm shadow-amber-500/10 active:scale-95 transition-all"
+              title="Rewards & UPI Cashouts (500 XP = ₹100 INR)"
+            >
+              <Gift className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
+              <span>₹ Rewards</span>
+            </button>
+          )}
 
           {/* Official Certificate Button (PNG download prompt) */}
           {onOpenCertificate && (
