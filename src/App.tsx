@@ -15,6 +15,7 @@ import { ProfileView } from './components/ProfileView';
 import { CompanyIntelligenceModal } from './components/CompanyIntelligenceModal';
 import { GoogleAuthScreen } from './components/GoogleAuthScreen';
 import { CertificateModal } from './components/CertificateModal';
+import { LetterOfRecommendationModal } from './components/LetterOfRecommendationModal';
 import { AdminDashboardView } from './components/AdminDashboardView';
 
 import {
@@ -83,6 +84,7 @@ export default function App() {
   const [isDeviceFrame, setIsDeviceFrame] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showLORModal, setShowLORModal] = useState(false);
 
   // 1. Listen to Firebase Authentication State
   useEffect(() => {
@@ -394,6 +396,10 @@ export default function App() {
             setSelectedInspectionProfile(inspectProfile);
             setShowCertificateModal(true);
           }}
+          onOpenLORModalForUser={(inspectProfile) => {
+            setSelectedInspectionProfile(inspectProfile);
+            setShowLORModal(true);
+          }}
         />
       );
     }
@@ -418,6 +424,10 @@ export default function App() {
             onOpenCertificate={() => {
               setSelectedInspectionProfile(null);
               setShowCertificateModal(true);
+            }}
+            onOpenLOR={() => {
+              setSelectedInspectionProfile(null);
+              setShowLORModal(true);
             }}
           />
         );
@@ -462,6 +472,14 @@ export default function App() {
             onUpdateProfile={handleUpdateProfile}
             onSignOut={handleSignOut}
             onOpenAdmin={() => setIsAdminMode(true)}
+            onOpenCertificate={() => {
+              setSelectedInspectionProfile(null);
+              setShowCertificateModal(true);
+            }}
+            onOpenLOR={() => {
+              setSelectedInspectionProfile(null);
+              setShowLORModal(true);
+            }}
           />
         );
       default:
@@ -511,6 +529,10 @@ export default function App() {
             setSelectedInspectionProfile(null);
             setShowCertificateModal(true);
           }}
+          onOpenLOR={() => {
+            setSelectedInspectionProfile(null);
+            setShowLORModal(true);
+          }}
           onOpenAdmin={() => setIsAdminMode(!isAdminMode)}
           isAdminAuthenticated={isAdminAuthenticated}
         />
@@ -552,6 +574,22 @@ export default function App() {
             setShowCertificateModal(false);
             setSelectedInspectionProfile(null);
           }}
+        />
+      )}
+
+      {/* Official Letter of Recommendation (LOR) Modal */}
+      {showLORModal && (
+        <LetterOfRecommendationModal
+          profile={selectedInspectionProfile || profile}
+          readiness={readiness}
+          skills={skills}
+          submissions={codingSubmissions}
+          aptitudeResults={aptitudeResults}
+          onClose={() => {
+            setShowLORModal(false);
+            setSelectedInspectionProfile(null);
+          }}
+          onUpdateProfile={handleUpdateProfile}
         />
       )}
     </div>

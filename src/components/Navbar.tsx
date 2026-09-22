@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles, ShieldAlert, Shield } from 'lucide-react';
+import { Flame, ShieldCheck, Smartphone, Monitor, Award, Sparkles, ShieldAlert, Shield, FileText } from 'lucide-react';
 import { StudentProfile } from '../types';
 
 interface NavbarProps {
@@ -8,6 +8,7 @@ interface NavbarProps {
   onToggleDeviceFrame: () => void;
   onOpenProfile: () => void;
   onOpenCertificate?: () => void;
+  onOpenLOR?: () => void;
   onOpenAdmin?: () => void;
   isAdminAuthenticated?: boolean;
 }
@@ -19,6 +20,7 @@ export function Navbar({
   onToggleDeviceFrame,
   onOpenProfile,
   onOpenCertificate,
+  onOpenLOR,
   onOpenAdmin,
   isAdminAuthenticated,
 }: NavbarProps) {
@@ -76,6 +78,19 @@ export function Navbar({
             >
               <Award className="w-3.5 h-3.5 text-slate-950 stroke-[2.5]" />
               <span className="hidden sm:inline">Certificate</span>
+            </button>
+          )}
+
+          {/* Official Letter of Recommendation (LOR) Button */}
+          {onOpenLOR && (
+            <button
+              id="nav-lor-btn"
+              onClick={onOpenLOR}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/30 cursor-pointer active:scale-95"
+              title="Official Letter Of Recommendation (Download PDF / PNG)"
+            >
+              <FileText className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+              <span className="hidden sm:inline">LOR</span>
             </button>
           )}
 

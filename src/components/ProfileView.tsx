@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   CloudCheck,
   Shield,
+  FileText,
+  Award,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -28,6 +30,8 @@ interface ProfileViewProps {
   onUpdateProfile: (updated: StudentProfile) => void;
   onSignOut?: () => void;
   onOpenAdmin?: () => void;
+  onOpenLOR?: () => void;
+  onOpenCertificate?: () => void;
   isSaving?: boolean;
 }
 
@@ -36,6 +40,8 @@ export function ProfileView({
   onUpdateProfile,
   onSignOut,
   onOpenAdmin,
+  onOpenLOR,
+  onOpenCertificate,
   isSaving = false,
 }: ProfileViewProps) {
   const [formData, setFormData] = useState<StudentProfile>(profile);
@@ -426,6 +432,34 @@ export function ProfileView({
             <Download className="w-3.5 h-3.5 text-indigo-400" />
             <span>Export Profile Backup (JSON)</span>
           </button>
+
+          {/* Official Academic Credentials: LOR & Certificate */}
+          {(onOpenLOR || onOpenCertificate) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {onOpenLOR && (
+                <button
+                  type="button"
+                  id="profile-download-lor-btn"
+                  onClick={onOpenLOR}
+                  className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 transition-all cursor-pointer active:scale-95"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Download LOR (PDF/PNG)</span>
+                </button>
+              )}
+              {onOpenCertificate && (
+                <button
+                  type="button"
+                  id="profile-download-cert-btn"
+                  onClick={onOpenCertificate}
+                  className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 transition-all cursor-pointer active:scale-95"
+                >
+                  <Award className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Certificate (PNG)</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {onOpenAdmin && (
             <button

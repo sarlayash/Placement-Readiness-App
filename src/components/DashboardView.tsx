@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Award,
   Download,
+  FileText,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -26,6 +27,7 @@ interface DashboardViewProps {
   onStartCoding: () => void;
   onOpenCompanyModal: () => void;
   onOpenCertificate?: () => void;
+  onOpenLOR?: () => void;
 }
 
 export function DashboardView({
@@ -37,6 +39,7 @@ export function DashboardView({
   onStartCoding,
   onOpenCompanyModal,
   onOpenCertificate,
+  onOpenLOR,
 }: DashboardViewProps) {
   const earnedBadges = badges.filter((b) => b.unlocked);
 
@@ -229,6 +232,42 @@ export function DashboardView({
           <span>View / PNG</span>
         </button>
       </div>
+
+      {/* Official Letter of Recommendation (LOR) Showcase Banner */}
+      {onOpenLOR && (
+        <div
+          id="official-lor-banner"
+          className="relative overflow-hidden bg-gradient-to-r from-blue-950/60 via-[#071126] to-slate-900 border border-blue-500/50 rounded-2xl p-4 shadow-xl flex items-center justify-between gap-3 f500-glow"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/30 shrink-0 border border-sky-300/40">
+              <FileText className="w-6 h-6 text-white stroke-[2.2]" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-sky-300 tracking-wide uppercase font-['Outfit',sans-serif]">
+                  Letter Of Recommendation (LOR)
+                </span>
+                <span className="text-[9px] bg-blue-500/20 text-sky-300 font-extrabold px-1.5 py-0.5 rounded-full border border-blue-400/40 shrink-0">
+                  PDF & PNG
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-0.5 truncate">
+                Endorsement with 11-Domain XP breakdown • Directed by <strong className="text-amber-300">Kapil Narula</strong>
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenLOR}
+            id="view-lor-btn"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-all shrink-0 cursor-pointer active:scale-95"
+          >
+            <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Get LOR</span>
+          </button>
+        </div>
+      )}
 
       {/* Assessment Portal Scope Banner */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-sm space-y-2">

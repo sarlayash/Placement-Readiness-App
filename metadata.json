@@ -1,6 +1,6 @@
 {
   "name": "Student Placement Intelligence Platform",
-  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive assessments covering Verbal Ability, Soft Skills, Coding, Excel, SQL, Power BI, AI, Generative AI, and Agentic AI with PNG-only badge and certificate exports.",
+  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive assessments covering 11 engineering domains with downloadable official Letter of Recommendation (PDF & PNG) showcasing strengths and verified XP.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

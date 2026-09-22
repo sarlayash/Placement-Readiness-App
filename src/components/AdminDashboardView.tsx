@@ -40,6 +40,7 @@ interface AdminDashboardViewProps {
   onLoginSuccess: () => void;
   onExitAdmin: () => void;
   onOpenCertificateModalForUser?: (profile: StudentProfile) => void;
+  onOpenLORModalForUser?: (profile: StudentProfile) => void;
 }
 
 // Cohort mock data so the dashboard is immediately rich with realistic multi-module learner analytics
@@ -172,6 +173,7 @@ export function AdminDashboardView({
   onLoginSuccess,
   onExitAdmin,
   onOpenCertificateModalForUser,
+  onOpenLORModalForUser,
 }: AdminDashboardViewProps) {
   // Login form state
   const [adminIdInput, setAdminIdInput] = useState('');
@@ -814,28 +816,53 @@ export function AdminDashboardView({
               )}
             </div>
 
-            {/* Official Certificate Action for this learner */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-neutral-950 to-amber-500/10 border border-amber-500/40 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-xs font-black text-amber-300 uppercase tracking-wider">
-                  Placement Readiness Certificate
+            {/* Official Credentials for this learner: Certificate and LOR */}
+            <div className="space-y-2">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-neutral-950 to-indigo-500/10 border border-blue-500/40 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-black text-sky-300 uppercase tracking-wider">
+                    Official Letter Of Recommendation (LOR)
+                  </div>
+                  <p className="text-[11px] text-neutral-300">
+                    Comprehensive 11-Domain breakdown • PDF & PNG formats • Signed by Kapil Narula
+                  </p>
                 </div>
-                <p className="text-[11px] text-neutral-300">
-                  Certified By SarlaYash Mission • Powered By Kapil (PNG format only)
-                </p>
+
+                {onOpenLORModalForUser && (
+                  <button
+                    onClick={() => {
+                      onOpenLORModalForUser(inspectingLearner);
+                      setInspectingLearner(null);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-blue-500/20 cursor-pointer active:scale-95 shrink-0"
+                  >
+                    View LOR (PDF/PNG)
+                  </button>
+                )}
               </div>
 
-              {onOpenCertificateModalForUser && (
-                <button
-                  onClick={() => {
-                    onOpenCertificateModalForUser(inspectingLearner);
-                    setInspectingLearner(null);
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black text-xs font-black uppercase tracking-wider shadow-md shadow-amber-500/20 cursor-pointer"
-                >
-                  Inspect Certificate (PNG)
-                </button>
-              )}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-neutral-950 to-amber-500/10 border border-amber-500/40 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                    Placement Readiness Certificate
+                  </div>
+                  <p className="text-[11px] text-neutral-300">
+                    Certified By SarlaYash Mission • Powered By Kapil (PNG format only)
+                  </p>
+                </div>
+
+                {onOpenCertificateModalForUser && (
+                  <button
+                    onClick={() => {
+                      onOpenCertificateModalForUser(inspectingLearner);
+                      setInspectingLearner(null);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black text-xs font-black uppercase tracking-wider shadow-md shadow-amber-500/20 cursor-pointer active:scale-95 shrink-0"
+                  >
+                    Inspect Certificate (PNG)
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
