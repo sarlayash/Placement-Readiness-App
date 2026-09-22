@@ -93,7 +93,7 @@ export function DayWiseMockTestSelector({
 {
   "dayNumber": ${activeDay + 1},
   "title": "Day ${activeDay + 1}: Advanced Placement Mock",
-  "tagline": "11 Domains • 10 MCQs each",
+  "tagline": "14 Domains • 10 MCQs each",
   "status": "active",
   "domains": [
     {
@@ -258,7 +258,7 @@ export function DayWiseMockTestSelector({
             className="py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Quick 10-MCQ Diagnostic</span>
+            <span>Quick Diagnostic ({currentPack.domains.length} MCQs)</span>
           </button>
         </div>
       </div>
@@ -269,11 +269,11 @@ export function DayWiseMockTestSelector({
         onSelectDay={(day) => setActiveDay(day)}
       />
 
-      {/* 11 Domains Grid: Each with 10 MCQs Placement Mock */}
+      {/* All Domains Grid: Each with 10 MCQs Placement Mock */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-            All 11 Domain Mock Tests (10 MCQs Each)
+            All {currentPack.domains.length} Domain Mock Tests (10 MCQs Each)
           </span>
           <span className="text-[10px] text-neutral-400">
             Timed • 12 Mins • Placement Questions

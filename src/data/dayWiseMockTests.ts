@@ -1701,60 +1701,66 @@ export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
   ],
 };
 
+export const DAY_3_MOCK_TEST_PACK: DayMockTestPack = {
+  dayNumber: 3,
+  title: 'Day 3: Speed, Strategy & High-Stakes Placement Simulation',
+  tagline: '14 Domains • 10 MCQs each • 140 Curated Problems',
+  description: 'Day 3 placement suite focusing on high-pressure technical execution, executive communication, contractual SLAs, incident de-escalation, and speed problem solving.',
+  status: 'active',
+  totalQuestions: 140,
+  domains: [
+    ...DAY_2_MOCK_TEST_PACK.domains
+      .filter(
+        (d) =>
+          !['professional_writing', 'business_communication', 'emotional_intelligence'].includes(d.category)
+      )
+      .map((d) => ({
+        ...d,
+        tagline: `Day 3: Speed & High-Pressure ${d.domainName} Round`,
+        questions: d.questions.map((q) => ({
+          ...q,
+          id: `d3_${q.id.replace(/^d[12]_/, '')}`,
+        })),
+      })),
+    {
+      category: 'professional_writing',
+      domainName: 'Professional Writing',
+      shortCode: 'PW',
+      badgeColor: '#06B6D4',
+      tagline: 'SLA Breach Notices, Executive Memos & Audit Runbooks',
+      targetRoles: ['Senior Engineers, Engineering Managers, Consultants'],
+      questions: DAY_3_PROFESSIONAL_WRITING_QUESTIONS,
+    },
+    {
+      category: 'business_communication',
+      domainName: 'Business Communication',
+      shortCode: 'BC',
+      badgeColor: '#8B5CF6',
+      tagline: 'BATNA Negotiation, Crisis PR & Cross-Org Leadership',
+      targetRoles: ['Directors, Product Leads, Tech Consultants'],
+      questions: DAY_3_BUSINESS_COMMUNICATION_QUESTIONS,
+    },
+    {
+      category: 'emotional_intelligence',
+      domainName: 'Emotional Intelligence (EQ)',
+      shortCode: 'EQ',
+      badgeColor: '#EC4899',
+      tagline: 'Crisis Leadership, Radical Candor & Inclusive Facilitation',
+      targetRoles: ['Engineering Leads, Project Directors, Executive Tracks'],
+      questions: DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
+    },
+  ],
+};
+
+export const ALL_DAY_3_QUESTIONS: AptitudeQuestion[] = DAY_3_MOCK_TEST_PACK.domains.flatMap(
+  (d) => d.questions
+);
+
 // Extensible Day Registry: Day 1, Day 2 & Day 3 active with all 14 Domains
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
   DAY_2_MOCK_TEST_PACK,
-  {
-    dayNumber: 3,
-    title: 'Day 3: Speed, Strategy & High-Stakes Placement Simulation',
-    tagline: '14 Domains • 10 MCQs each • 140 Curated Problems',
-    description: 'Day 3 placement suite focusing on high-pressure technical execution, executive communication, contractual SLAs, incident de-escalation, and speed problem solving.',
-    status: 'active',
-    totalQuestions: 140,
-    domains: [
-      ...DAY_2_MOCK_TEST_PACK.domains
-        .filter(
-          (d) =>
-            !['professional_writing', 'business_communication', 'emotional_intelligence'].includes(d.category)
-        )
-        .map((d) => ({
-          ...d,
-          tagline: `Day 3: Speed & High-Pressure ${d.domainName} Round`,
-          questions: d.questions.map((q) => ({
-            ...q,
-            id: `d3_${q.id.replace(/^d[12]_/, '')}`,
-          })),
-        })),
-      {
-        category: 'professional_writing',
-        domainName: 'Professional Writing',
-        shortCode: 'PW',
-        badgeColor: '#06B6D4',
-        tagline: 'SLA Breach Notices, Executive Memos & Audit Runbooks',
-        targetRoles: ['Senior Engineers, Engineering Managers, Consultants'],
-        questions: DAY_3_PROFESSIONAL_WRITING_QUESTIONS,
-      },
-      {
-        category: 'business_communication',
-        domainName: 'Business Communication',
-        shortCode: 'BC',
-        badgeColor: '#8B5CF6',
-        tagline: 'BATNA Negotiation, Crisis PR & Cross-Org Leadership',
-        targetRoles: ['Directors, Product Leads, Tech Consultants'],
-        questions: DAY_3_BUSINESS_COMMUNICATION_QUESTIONS,
-      },
-      {
-        category: 'emotional_intelligence',
-        domainName: 'Emotional Intelligence (EQ)',
-        shortCode: 'EQ',
-        badgeColor: '#EC4899',
-        tagline: 'Crisis Leadership, Radical Candor & Inclusive Facilitation',
-        targetRoles: ['Engineering Leads, Project Directors, Executive Tracks'],
-        questions: DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
-      },
-    ],
-  },
+  DAY_3_MOCK_TEST_PACK,
 ];
 
 // Helper to flatten all Day 1 questions into a combined question bank

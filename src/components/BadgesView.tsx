@@ -15,19 +15,24 @@ import {
   Download,
   FileText,
   MessageSquare,
+  TrendingUp,
 } from 'lucide-react';
-import { Badge, StudentProfile } from '../types';
+import { Badge, StudentProfile, ReadinessScoreBreakdown } from '../types';
 import { downloadBadgeAsPNG } from '../utils/pngExporter';
 
 interface BadgesViewProps {
   badges: Badge[];
   profile: StudentProfile;
+  readiness?: ReadinessScoreBreakdown;
 }
 
-export function BadgesView({ badges, profile }: BadgesViewProps) {
+export function BadgesView({ badges, profile, readiness }: BadgesViewProps) {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [copiedShare, setCopiedShare] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const priScore = readiness?.pri?.score || Math.max(1, Math.min(100, Math.round((readiness?.overallScore || 700) / 10)));
+  const priTier = readiness?.pri?.tier || (priScore >= 80 ? 'Unicorn Ready' : 'Placement Ready');
 
   const unlockedCount = badges.filter((b) => b.unlocked).length;
 
@@ -197,6 +202,37 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
         </div>
       </div>
 
+      {/* Placement Readiness Index (PRI: 1 to 100) Badge Standing Strip */}
+      <div className="bg-gradient-to-r from-[#0c1635] via-[#091129] to-[#040816] border border-sky-500/40 rounded-2xl p-3.5 shadow-lg flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 shrink-0">
+            <ShieldCheck className="w-5 h-5 text-sky-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-black text-white uppercase tracking-wider font-['Outfit',sans-serif]">
+                Placement Readiness Index (PRI)
+              </span>
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                1 – 100 Scale
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Verified standing: <strong className="text-emerald-400">{priTier}</strong> • {readiness?.pri?.percentile || 88}th Percentile
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <div className="text-sm font-black text-white font-['Outfit',sans-serif]">
+              {priScore} <span className="text-[10px] font-bold text-slate-400">/ 100</span>
+            </div>
+            <div className="text-[9px] text-slate-400">Candidate PRI</div>
+          </div>
+        </div>
+      </div>
+
       {/* Badges Grid (Faceted Microsoft/Google Credential Cards) */}
       <div className="grid grid-cols-2 gap-3">
         {badges.map((badge) => {
@@ -243,6 +279,16 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
                 <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                   {badge.description}
                 </p>
+
+                {badge.unlocked && (
+                  <div className="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>PRI Verified</span>
+                    </span>
+                    <span className="text-slate-400 font-mono text-[9px]">PRI: {priScore}/100</span>
+                  </div>
+                )}
               </div>
 
               {/* Status & PNG Download Button */}
@@ -342,6 +388,10 @@ export function BadgesView({ badges, profile }: BadgesViewProps) {
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
                   <span className="text-slate-400">Chief Mentor:</span>
                   <span className="text-white font-medium">Powered By Kapil</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                  <span className="text-slate-400">Placement Readiness (PRI):</span>
+                  <span className="text-emerald-400 font-bold">{priScore}/100 • {priTier}</span>
                 </div>
                 <div className="flex justify-between pt-0.5">
                   <span className="text-slate-400">Export Format:</span>

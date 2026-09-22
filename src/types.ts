@@ -184,8 +184,24 @@ export interface PersonalizedRoadmap {
   phases: RoadmapPhase[];
 }
 
+export interface PlacementReadinessIndex {
+  score: number; // 1 to 100
+  tier: 'Tier-1 Elite' | 'Unicorn Ready' | 'Product Competitive' | 'Placement Ready' | 'Developing Core';
+  tierLabel: string;
+  badgeColor: string;
+  percentile: number; // e.g. 88
+  breakdown: {
+    dailyAssessments: number; // max 40
+    profileStrength: number; // max 25
+    technicalProblemSolving: number; // max 20
+    streakConsistency: number; // max 15
+  };
+  summary: string;
+}
+
 export interface ReadinessScoreBreakdown {
   overallScore: number; // 0 - 1000
+  pri: PlacementReadinessIndex; // 1 - 100 Placement Readiness Index
   percentile: number; // e.g. 88
   codingScore: number; // max 350
   aptitudeScore: number; // max 250

@@ -323,6 +323,9 @@ export function LetterOfRecommendationModal({
                     <div className="text-slate-500">
                       Issue Date: <strong className="text-slate-700" style={{ color: isLight ? '#1e293b' : '#cbd5e1' }}>{lorData.issueDate}</strong>
                     </div>
+                    <div className="font-mono font-extrabold text-[10px] text-sky-500">
+                      PRI: <strong>{lorData.priScore || Math.round(lorData.overallReadiness.score / 10)}/100</strong> • {lorData.priTier || 'Unicorn Ready'}
+                    </div>
                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[9px] font-black uppercase">
                       <ShieldCheck className="w-3 h-3" />
                       <span>Authenticated Record</span>
@@ -352,7 +355,7 @@ export function LetterOfRecommendationModal({
                     <strong className="text-blue-900" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>{lorData.student.targetRole}</strong>.
                   </p>
                   <p className="mt-2">
-                    Under the standardized evaluation methodology of the <strong>SarlaYash Mission Placement Intelligence Program</strong>, the candidate underwent continuous algorithmic, quantitative, behavioral, and architectural assessments. They achieved a distinguished Placement Readiness Score of{' '}
+                    Under the standardized evaluation methodology of the <strong>SarlaYash Mission Placement Intelligence Program</strong>, the candidate underwent continuous algorithmic, quantitative, behavioral, and architectural assessments. They achieved a verified <strong>Placement Readiness Index (PRI) of {lorData.priScore || Math.round(lorData.overallReadiness.score / 10)} / 100 ({lorData.priTier || 'Unicorn Ready'})</strong> and a composite Placement Readiness Score of{' '}
                     <strong className="text-blue-900 font-bold" style={{ color: isLight ? '#0f172a' : '#38bdf8' }}>
                       {lorData.overallReadiness.score} / 1000
                     </strong>{' '}
@@ -548,6 +551,9 @@ export function LetterOfRecommendationModal({
                       <div className="text-slate-500">
                         Date: <strong className="text-slate-700" style={{ color: isLight ? '#1e293b' : '#cbd5e1' }}>{lorData.issueDate}</strong>
                       </div>
+                      <div className="font-mono font-extrabold text-[10px] text-sky-500">
+                        PRI: <strong>{lorData.priScore || Math.round(lorData.overallReadiness.score / 10)}/100</strong> • {lorData.priTier || 'Unicorn Ready'}
+                      </div>
                       <div className="text-slate-400 text-[9px] font-bold uppercase">
                         Page 1 of 2 • Official Recommendation
                       </div>
@@ -577,7 +583,7 @@ export function LetterOfRecommendationModal({
                     </p>
 
                     <p>
-                      Throughout our structured placement intelligence modules, {lorData.student.fullName} has exhibited outstanding technical tenacity, analytical depth, and an unwavering commitment to engineering craftsmanship. On our benchmarked examinations, they secured an overall Placement Readiness Score (PRS) of{' '}
+                      Throughout our structured placement intelligence modules, {lorData.student.fullName} has exhibited outstanding technical tenacity, analytical depth, and an unwavering commitment to engineering craftsmanship. On our benchmarked examinations, they secured a verified <strong>Placement Readiness Index (PRI) of {lorData.priScore || Math.round(lorData.overallReadiness.score / 10)} / 100 ({lorData.priTier || 'Unicorn Ready'})</strong> alongside a Placement Readiness Score (PRS) of{' '}
                       <strong className="text-blue-900 font-bold" style={{ color: isLight ? '#0f172a' : '#38bdf8' }}>
                         {lorData.overallReadiness.score} / 1000
                       </strong>

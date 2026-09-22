@@ -6,7 +6,7 @@ import {
   Badge,
   PersonalizedRoadmap,
 } from '../types';
-import { ALL_DAY_1_QUESTIONS, ALL_DAY_2_QUESTIONS } from './dayWiseMockTests';
+import { ALL_DAY_1_QUESTIONS, ALL_DAY_2_QUESTIONS, ALL_DAY_3_QUESTIONS } from './dayWiseMockTests';
 import { ALL_CODING_PROBLEMS } from './codingChallenges';
 
 export function createDefaultProfile(user: {
@@ -39,6 +39,7 @@ export function createDefaultProfile(user: {
 export const APTITUDE_QUESTION_BANK: AptitudeQuestion[] = [
   ...ALL_DAY_1_QUESTIONS,
   ...ALL_DAY_2_QUESTIONS,
+  ...ALL_DAY_3_QUESTIONS,
   // Additional practice questions:
   {
     id: 'apt_07',
@@ -530,6 +531,18 @@ export const INITIAL_BADGES: Badge[] = [
     icon: 'Terminal',
     category: 'Coding',
     rarity: 'Common',
+    unlocked: true,
+    unlockedAt: 'Sep 2026',
+    progress: 1,
+    maxProgress: 1,
+  },
+  {
+    id: 'b_pri_master',
+    title: 'Placement Readiness Index (PRI) Vanguard',
+    description: 'Achieve a verified Placement Readiness Index (PRI) above 75/100 across daily assessments, profile rigor, and technical problem solving.',
+    icon: 'ShieldCheck',
+    category: 'Readiness',
+    rarity: 'Legendary',
     unlocked: true,
     unlockedAt: 'Sep 2026',
     progress: 1,

@@ -4,7 +4,9 @@ import {
   SkillItem,
   CodingSubmission,
   AptitudeAssessmentResult,
+  PlacementReadinessIndex,
 } from '../types';
+import { computePlacementReadinessIndex } from './scoreCalculator';
 
 export interface DomainXPItem {
   id: string;
@@ -44,7 +46,13 @@ export interface LetterOfRecommendationData {
     percentile: number;
     totalEarnedXP: number;
     statusLabel: string;
+    priScore: number; // 1 to 100 Placement Readiness Index
+    priTier: string;
+    priPercentile: number;
+    priBreakdown: PlacementReadinessIndex['breakdown'];
   };
+  priScore: number;
+  priTier: string;
   domainXPList: DomainXPItem[];
   strengthPillars: CandidateStrengthPillar[];
   institutionalSignatories: {
@@ -300,6 +308,10 @@ export function generateLetterOfRecommendationData(
       ? 'Campus Placement Competitive (High Merit)'
       : 'Placement Qualified & Actively Accelerating';
 
+  const priData =
+    readiness.pri ||
+    computePlacementReadinessIndex(profile, skills, submissions, aptitudeResults);
+
   return {
     referenceId,
     issueDate,
@@ -316,10 +328,16 @@ export function generateLetterOfRecommendationData(
     overallReadiness: {
       score: readiness.overallScore || 780,
       maxScore: 1000,
-      percentile: Math.max(75, readiness.percentile || 88),
+      percentile: Math.max(75, readiness.percentile || priData.percentile || 88),
       totalEarnedXP,
       statusLabel,
+      priScore: priData.score,
+      priTier: priData.tier,
+      priPercentile: priData.percentile,
+      priBreakdown: priData.breakdown,
     },
+    priScore: priData.score,
+    priTier: priData.tier,
     domainXPList,
     strengthPillars,
     institutionalSignatories: {

@@ -33,6 +33,10 @@ export function CertificateModal({
     year: 'numeric',
   });
 
+  const priScore = readiness.pri?.score || Math.max(1, Math.min(100, Math.round(readiness.overallScore / 10)));
+  const priTier = readiness.pri?.tier || (priScore >= 80 ? 'Unicorn Ready' : 'Placement Ready');
+  const priPercentile = readiness.pri?.percentile || readiness.percentile;
+
   const verifiedSkills = [
     'Verbal Ability',
     'Soft Skills',
@@ -46,6 +50,8 @@ export function CertificateModal({
     'AI Foundations',
     'Generative AI',
     'Agentic AI',
+    'Quantitative Aptitude',
+    'Logical Reasoning',
   ];
 
   const handleDownloadPNG = async () => {
@@ -228,6 +234,20 @@ export function CertificateModal({
               >
                 PROFESSIONAL MULTI-MODULE ASSESSMENT CREDENTIAL
               </p>
+
+              {/* Placement Readiness Index (PRI: 1 to 100) Official Calibration Tag */}
+              <div className="flex justify-center pt-2">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-black tracking-wider border shadow-sm ${
+                    certTheme === 'dark'
+                      ? 'bg-sky-500/20 border-sky-400/50 text-sky-200'
+                      : 'bg-blue-100 border-blue-300 text-blue-900'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
+                  <span>PLACEMENT READINESS INDEX (PRI): {priScore}/100 • {priTier}</span>
+                </span>
+              </div>
             </div>
 
             {/* Presentation Section */}
@@ -261,16 +281,20 @@ export function CertificateModal({
                 {profile.college ? (
                   <>from <strong className={certTheme === 'dark' ? 'text-white' : 'text-slate-900'}>{profile.college}</strong>, </>
                 ) : null}
-                has fulfilled all rigorous evaluation standards across 12 core competencies including{' '}
+                has fulfilled all rigorous evaluation standards across 14 core competencies with a verified{' '}
+                <strong className={certTheme === 'dark' ? 'text-sky-300' : 'text-blue-700'}>
+                  Placement Readiness Index (PRI) of {priScore}/100 ({priTier})
+                </strong>
+                , exhibiting tier-one placement caliber in{' '}
                 <span className={certTheme === 'dark' ? 'text-sky-300 font-bold' : 'text-blue-700 font-bold'}>
                   Verbal Reasoning, Professional Writing, Business Communication, EQ, DSA, Data Analytics & Agentic AI
                 </span>
-                , exhibiting tier-one placement caliber.
+                .
               </p>
             </div>
 
             {/* Verified Skills Pill Bar */}
-            <div className="flex flex-wrap justify-center gap-1.5 my-3.5 max-w-xl mx-auto relative z-10">
+            <div className="flex flex-wrap justify-center gap-1.5 my-3 max-w-xl mx-auto relative z-10">
               {verifiedSkills.map((skill) => (
                 <span
                   key={skill}
@@ -286,8 +310,32 @@ export function CertificateModal({
               ))}
             </div>
 
-            {/* Verified Metrics Badge Ribbon */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 my-3.5 max-w-lg mx-auto relative z-10 text-center">
+            {/* Verified Metrics Badge Ribbon (4 Cards including PRI 1 to 100) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 my-3.5 max-w-2xl mx-auto relative z-10 text-center">
+              {/* Card 1: Placement Readiness Index (PRI) */}
+              <div
+                className={`rounded-xl p-2.5 border ${
+                  certTheme === 'dark'
+                    ? 'bg-[#091124] border-sky-500/40 shadow-sm shadow-sky-500/10'
+                    : 'bg-sky-50 border-sky-300'
+                }`}
+              >
+                <span className="text-[9px] uppercase font-bold text-sky-400 tracking-wider block truncate">
+                  Placement Index (PRI)
+                </span>
+                <span
+                  className={`text-base sm:text-xl font-black ${
+                    certTheme === 'dark' ? 'text-sky-300' : 'text-sky-800'
+                  }`}
+                >
+                  {priScore} <span className="text-xs text-slate-400 font-normal">/ 100</span>
+                </span>
+                <span className="text-[9px] text-emerald-500 block font-bold truncate">
+                  Top {100 - priPercentile}% Standing
+                </span>
+              </div>
+
+              {/* Card 2: Composite PRS */}
               <div
                 className={`rounded-xl p-2.5 border ${
                   certTheme === 'dark'
@@ -295,21 +343,22 @@ export function CertificateModal({
                     : 'bg-blue-50/50 border-blue-200/80'
                 }`}
               >
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block truncate">
                   Readiness Score
                 </span>
                 <span
                   className={`text-base sm:text-xl font-black ${
-                    certTheme === 'dark' ? 'text-sky-300' : 'text-blue-700'
+                    certTheme === 'dark' ? 'text-indigo-300' : 'text-blue-700'
                   }`}
                 >
                   {readiness.overallScore} <span className="text-xs text-slate-400 font-normal">/ 1000</span>
                 </span>
-                <span className="text-[9px] text-emerald-500 block font-bold">
-                  Top {100 - readiness.percentile}% Benchmark
+                <span className="text-[9px] text-slate-400 block font-medium truncate">
+                  Composite Evaluation
                 </span>
               </div>
 
+              {/* Card 3: Target Role */}
               <div
                 className={`rounded-xl p-2.5 border ${
                   certTheme === 'dark'
@@ -317,7 +366,7 @@ export function CertificateModal({
                     : 'bg-blue-50/50 border-blue-200/80'
                 }`}
               >
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block truncate">
                   Target Role
                 </span>
                 <span
@@ -327,11 +376,12 @@ export function CertificateModal({
                 >
                   {profile.targetRole || 'Software Engineer'}
                 </span>
-                <span className="text-[9px] text-amber-500 block font-bold">
+                <span className="text-[9px] text-amber-500 block font-bold truncate">
                   {profile.targetCompanyTier?.split(' ')[0] || 'Tier-1'} Ready
                 </span>
               </div>
 
+              {/* Card 4: Standing & Tracks */}
               <div
                 className={`rounded-xl p-2.5 border ${
                   certTheme === 'dark'
@@ -339,13 +389,13 @@ export function CertificateModal({
                     : 'bg-blue-50/50 border-blue-200/80'
                 }`}
               >
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block truncate">
                   Standing
                 </span>
-                <span className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5 block">
+                <span className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5 block truncate">
                   All 12 Tracks Cleared
                 </span>
-                <span className="text-[9px] text-slate-400 block font-medium">
+                <span className="text-[9px] text-slate-400 block font-medium truncate">
                   Verified Accreditation
                 </span>
               </div>

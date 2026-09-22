@@ -1,6 +1,6 @@
 {
   "name": "Student Placement Intelligence Platform",
-  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive assessments covering 11 engineering domains with downloadable official Letter of Recommendation (PDF & PNG) showcasing strengths and verified XP.",
+  "description": "Placement assessment portal certified by SarlaYash Mission and powered by Kapil. Comprehensive Day-wise assessments covering 14 placement domains, Placement Readiness Index (PRI: 1-100), verified badges, certificates, and downloadable official Letter of Recommendation.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

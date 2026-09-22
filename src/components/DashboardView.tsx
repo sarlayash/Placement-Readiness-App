@@ -11,6 +11,7 @@ import {
   Award,
   Download,
   FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   StudentProfile,
@@ -72,7 +73,110 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* Hero: Placement Readiness Score (PRS) (Fortune 500 Sovereign Blue Card) */}
+      {/* Primary Hero: PLACEMENT READINESS INDEX (PRI) on Scale 1 to 100 */}
+      <div
+        id="placement-readiness-index-card"
+        className="relative overflow-hidden bg-gradient-to-br from-[#0c1635] via-[#091129] to-[#040816] border-2 border-sky-500/40 rounded-2xl p-5 shadow-2xl transition-all"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-emerald-400" />
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center justify-between relative z-10 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 shadow-sm">
+              <ShieldCheck className="w-4 h-4 text-sky-300" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black uppercase tracking-wider text-white font-['Outfit',sans-serif]">
+                  Placement Readiness Index (PRI)
+                </span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">
+                  Scale 1 – 100
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Calibrated against daily assessment accuracy, profile rigor & DSA milestones
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">
+            Top {100 - (readiness.pri?.percentile || readiness.percentile)}% Benchmark
+          </span>
+        </div>
+
+        {/* PRI Score Metric & Tier Status */}
+        <div className="mt-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-black tracking-tight text-white font-['Outfit',sans-serif]">
+                {readiness.pri?.score || Math.max(1, Math.min(100, Math.round(readiness.overallScore / 10)))}
+              </span>
+              <span className="text-base font-bold text-slate-400">/ 100</span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1 flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>{readiness.pri?.tierLabel || 'High-Growth Tech & Product Engineering Ready'}</span>
+            </p>
+          </div>
+
+          <div className="text-right">
+            <span
+              className="inline-block px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm border"
+              style={{
+                backgroundColor: `${readiness.pri?.badgeColor || '#0EA5E9'}22`,
+                borderColor: `${readiness.pri?.badgeColor || '#0EA5E9'}66`,
+                color: readiness.pri?.badgeColor || '#38BDF8',
+              }}
+            >
+              {readiness.pri?.tier || 'Unicorn Ready'}
+            </span>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {readiness.pri?.percentile || readiness.percentile}th national percentile
+            </p>
+          </div>
+        </div>
+
+        {/* PRI Visual Progress Gauge */}
+        <div className="mt-4 relative z-10">
+          <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800 p-0.5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400 transition-all duration-700 shadow-sm shadow-sky-500/40"
+              style={{ width: `${readiness.pri?.score || Math.max(1, Math.min(100, Math.round(readiness.overallScore / 10)))}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 4 Multi-Factor Contributor Pills (Strictly structured, no overlap) */}
+        <div className="mt-3.5 pt-3 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-2 relative z-10">
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2 text-center">
+            <span className="block text-[10px] text-slate-400 font-semibold truncate">Daily Tests</span>
+            <span className="text-xs font-black text-sky-300">
+              {readiness.pri?.breakdown.dailyAssessments ?? 36} <span className="text-[10px] text-slate-500">/40</span>
+            </span>
+          </div>
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2 text-center">
+            <span className="block text-[10px] text-slate-400 font-semibold truncate">Profile Rigor</span>
+            <span className="text-xs font-black text-indigo-300">
+              {readiness.pri?.breakdown.profileStrength ?? 22} <span className="text-[10px] text-slate-500">/25</span>
+            </span>
+          </div>
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2 text-center">
+            <span className="block text-[10px] text-slate-400 font-semibold truncate">Technical DSA</span>
+            <span className="text-xs font-black text-emerald-300">
+              {readiness.pri?.breakdown.technicalProblemSolving ?? 18} <span className="text-[10px] text-slate-500">/20</span>
+            </span>
+          </div>
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2 text-center">
+            <span className="block text-[10px] text-slate-400 font-semibold truncate">Streak Discipline</span>
+            <span className="text-xs font-black text-amber-300">
+              {readiness.pri?.breakdown.streakConsistency ?? 14} <span className="text-[10px] text-slate-500">/15</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero: Composite PRS Matrix (0 – 1000 Pts) */}
       <div
         id="placement-readiness-hero-card"
         className="relative overflow-hidden bg-gradient-to-br from-[#0b1329] via-[#080e22] to-[#040816] border border-blue-500/30 rounded-2xl p-5 shadow-2xl f500-glow"
@@ -84,7 +188,7 @@ export function DashboardView({
           <div className="flex items-center gap-1.5">
             <Target className="w-4 h-4 text-sky-400" />
             <span className="text-xs font-black uppercase tracking-wider text-sky-300 font-['Outfit',sans-serif]">
-              Placement Readiness Score™
+              Composite PRS Matrix (0 – 1000 Pts)
             </span>
           </div>
           <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-sky-300 border border-blue-400/40">

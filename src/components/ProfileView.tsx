@@ -17,15 +17,18 @@ import {
   CloudCheck,
   FileText,
   Award,
+  TrendingUp,
 } from 'lucide-react';
 import {
   StudentProfile,
   RoleType,
   CompanyTier,
+  ReadinessScoreBreakdown,
 } from '../types';
 
 interface ProfileViewProps {
   profile: StudentProfile;
+  readiness?: ReadinessScoreBreakdown;
   onUpdateProfile: (updated: StudentProfile) => void;
   onSignOut?: () => void;
   onOpenLOR?: () => void;
@@ -35,6 +38,7 @@ interface ProfileViewProps {
 
 export function ProfileView({
   profile,
+  readiness,
   onUpdateProfile,
   onSignOut,
   onOpenLOR,
@@ -191,6 +195,129 @@ export function ProfileView({
           </button>
         )}
       </div>
+
+      {/* Placement Readiness Index (PRI: 1 to 100) Executive Profile Card */}
+      {readiness && (
+        <div
+          id="profile-pri-card"
+          className="relative overflow-hidden bg-gradient-to-br from-[#0c1635] via-[#091129] to-[#040816] border border-sky-500/40 rounded-2xl p-4 shadow-xl space-y-3.5"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300">
+                <ShieldCheck className="w-4 h-4 text-sky-300" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider font-['Outfit',sans-serif]">
+                    Placement Readiness Index (PRI)
+                  </h3>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">
+                    Scale 1 – 100
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Campus recruitment readiness index derived from daily assessments and profile metrics
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              Top {100 - (readiness.pri?.percentile || readiness.percentile)}% National Standing
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-black text-white font-['Outfit',sans-serif]">
+                  {readiness.pri?.score || Math.max(1, Math.min(100, Math.round(readiness.overallScore / 10)))}
+                </span>
+                <span className="text-sm font-bold text-slate-400">/ 100</span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{readiness.pri?.tierLabel || 'High-Growth Tech Unicorn & Product Ready'}</span>
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span
+                className="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border"
+                style={{
+                  backgroundColor: `${readiness.pri?.badgeColor || '#0EA5E9'}22`,
+                  borderColor: `${readiness.pri?.badgeColor || '#0EA5E9'}55`,
+                  color: readiness.pri?.badgeColor || '#38BDF8',
+                }}
+              >
+                {readiness.pri?.tier || 'Unicorn Ready'}
+              </span>
+              <p className="text-[10px] text-slate-400 mt-1">
+                PRS: {readiness.overallScore}/1000 pts
+              </p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400 transition-all duration-500"
+              style={{ width: `${readiness.pri?.score || Math.round(readiness.overallScore / 10)}%` }}
+            />
+          </div>
+
+          {/* 4 factors */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-2 text-center">
+              <span className="block text-[10px] text-slate-400 font-semibold truncate">Daily Tests</span>
+              <span className="text-xs font-black text-sky-300">
+                {readiness.pri?.breakdown.dailyAssessments ?? 36} <span className="text-[10px] text-slate-500">/40</span>
+              </span>
+            </div>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-2 text-center">
+              <span className="block text-[10px] text-slate-400 font-semibold truncate">Profile Rigor</span>
+              <span className="text-xs font-black text-indigo-300">
+                {readiness.pri?.breakdown.profileStrength ?? 22} <span className="text-[10px] text-slate-500">/25</span>
+              </span>
+            </div>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-2 text-center">
+              <span className="block text-[10px] text-slate-400 font-semibold truncate">Technical DSA</span>
+              <span className="text-xs font-black text-emerald-300">
+                {readiness.pri?.breakdown.technicalProblemSolving ?? 18} <span className="text-[10px] text-slate-500">/20</span>
+              </span>
+            </div>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-2 text-center">
+              <span className="block text-[10px] text-slate-400 font-semibold truncate">Streak Discipline</span>
+              <span className="text-xs font-black text-amber-300">
+                {readiness.pri?.breakdown.streakConsistency ?? 14} <span className="text-[10px] text-slate-500">/15</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Direct Credential Actions */}
+          <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+            {onOpenCertificate && (
+              <button
+                type="button"
+                onClick={onOpenCertificate}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-300 text-xs font-bold transition-all cursor-pointer"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span>Certificate (PNG)</span>
+              </button>
+            )}
+            {onOpenLOR && (
+              <button
+                type="button"
+                onClick={onOpenLOR}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-sky-300 text-xs font-bold transition-all cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-sky-300" />
+                <span>Official LOR</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Edit Form */}
       <form onSubmit={handleSave} className="space-y-4">
