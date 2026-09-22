@@ -39,6 +39,9 @@ import {
   Briefcase,
   Search,
   X,
+  Target,
+  Zap,
+  ChevronDown,
 } from 'lucide-react';
 import {
   AptitudeQuestion,
@@ -53,6 +56,15 @@ import { SpinningWheelModal, WheelReward } from './SpinningWheelModal';
 import { DayWiseMockTestSelector } from './DayWiseMockTestSelector';
 import { DayDomainMockTest, ALL_DAY_MOCK_TESTS } from '../data/dayWiseMockTests';
 import { DayWiseInterviewTipsCard } from './DayWiseInterviewTipsCard';
+import { LevelUpAssessmentSelector } from './LevelUpAssessmentSelector';
+import {
+  DailyLevelUpAssessmentSchedule,
+  DAILY_LEVEL_UP_SCHEDULE,
+  LEVEL_UP_100_QUESTIONS,
+  LEVEL_UP_PASSING_PERCENTAGE,
+  LEVEL_UP_PASSING_COUNT,
+  LevelUpQuestion,
+} from '../data/levelUpQuestions';
 
 interface AssessmentsViewProps {
   questions: AptitudeQuestion[];
@@ -60,7 +72,7 @@ interface AssessmentsViewProps {
   submissions: CodingSubmission[];
   onCompleteAptitude: (result: AptitudeAssessmentResult) => void;
   onSubmitCoding: (submission: CodingSubmission) => void;
-  defaultSubTab?: 'aptitude' | 'coding' | 'tips';
+  defaultSubTab?: 'aptitude' | 'coding' | 'tips' | 'levelup';
 }
 
 type ModuleFilter = 'all' | AssessmentCategory;
@@ -73,11 +85,27 @@ export function AssessmentsView({
   onSubmitCoding,
   defaultSubTab = 'aptitude',
 }: AssessmentsViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding' | 'tips'>(defaultSubTab);
-  const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules'>('day_wise');
+  const [activeSubTab, setActiveSubTab] = useState<'aptitude' | 'coding' | 'tips' | 'levelup'>(defaultSubTab);
+  const [assessmentMode, setAssessmentMode] = useState<'day_wise' | 'modules' | 'level_up'>('day_wise');
   const [selectedModule, setSelectedModule] = useState<ModuleFilter>('all');
   const [moduleSearch, setModuleSearch] = useState<string>('');
   const [moduleClusterFilter, setModuleClusterFilter] = useState<'all' | 'core_infra' | 'specialized' | 'cloud' | 'cyber_data' | 'ai' | 'aptitude'>('all');
+
+  // Level Up 100-MCQ State
+  const [isLevelUpMode, setIsLevelUpMode] = useState<boolean>(false);
+  const [activeLevelUpSchedule, setActiveLevelUpSchedule] = useState<DailyLevelUpAssessmentSchedule | null>(null);
+  const [levelUpHistory, setLevelUpHistory] = useState<
+    Record<string, { score: number; total: number; percentage: number; passed: boolean; completedAt: string }>
+  >(() => {
+    try {
+      const saved = localStorage.getItem('placement_level_up_history');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [showLevelUpPaletteDrawer, setShowLevelUpPaletteDrawer] = useState<boolean>(false);
+  const [levelUpPaletteFilter, setLevelUpPaletteFilter] = useState<'all' | 'answered' | 'unanswered' | 'marked'>('all');
 
   // Day-wise custom test state
   const [customTestPool, setCustomTestPool] = useState<AptitudeQuestion[] | null>(null);
@@ -193,6 +221,8 @@ export function AssessmentsView({
   }, [isTestActive]);
 
   const handleStartAptitudeTest = () => {
+    setIsLevelUpMode(false);
+    setActiveLevelUpSchedule(null);
     setSelectedAnswers({});
     setMarkedForReview({});
     setCurrentQuestionIndex(0);
@@ -213,6 +243,8 @@ export function AssessmentsView({
   };
 
   const handleStartDayDomainTest = (dayNumber: number, domain: DayDomainMockTest) => {
+    setIsLevelUpMode(false);
+    setActiveLevelUpSchedule(null);
     setCustomTestPool(domain.questions);
     setCustomTestTitle(`Day ${dayNumber} • ${domain.domainName} Placement Mock (10 MCQs)`);
     setActiveDayDomainKey(`day_${dayNumber}_${domain.category}`);
@@ -231,6 +263,8 @@ export function AssessmentsView({
   };
 
   const handleStartFullDayTest = (dayNumber: number) => {
+    setIsLevelUpMode(false);
+    setActiveLevelUpSchedule(null);
     const pack = ALL_DAY_MOCK_TESTS.find((p) => p.dayNumber === dayNumber) || ALL_DAY_MOCK_TESTS[0];
     const fullQuestions = pack.domains.flatMap((d) => d.questions);
     setCustomTestPool(fullQuestions);
@@ -251,6 +285,8 @@ export function AssessmentsView({
   };
 
   const handleStartDiagnosticTest = (dayNumber: number) => {
+    setIsLevelUpMode(false);
+    setActiveLevelUpSchedule(null);
     const pack = ALL_DAY_MOCK_TESTS.find((p) => p.dayNumber === dayNumber) || ALL_DAY_MOCK_TESTS[0];
     const sample11 = pack.domains.map((d) => d.questions[0]).filter(Boolean);
     setCustomTestPool(sample11);
@@ -267,6 +303,31 @@ export function AssessmentsView({
     setEliminatedOptions({});
     setWheelBonusSummary(null);
     setShowWheelModal(false);
+    setIsTestActive(true);
+  };
+
+  const handleStartLevelUpTest = (
+    schedule: DailyLevelUpAssessmentSchedule,
+    questionsToUse: LevelUpQuestion[]
+  ) => {
+    setIsLevelUpMode(true);
+    setActiveLevelUpSchedule(schedule);
+    setCustomTestPool(questionsToUse);
+    setCustomTestTitle(schedule.title);
+    setActiveDayDomainKey(schedule.id);
+    setSelectedAnswers({});
+    setMarkedForReview({});
+    setCurrentQuestionIndex(0);
+    setSecondsRemaining(100 * 60); // 100 minutes for 100 MCQs
+    setTestResult(null);
+    setShowReviewExplanations(false);
+    setWheelReward(null);
+    setWheelQuestionId(null);
+    setEliminatedOptions({});
+    setWheelBonusSummary(null);
+    setShowWheelModal(false);
+    setShowLevelUpPaletteDrawer(false);
+    setLevelUpPaletteFilter('all');
     setIsTestActive(true);
   };
 
@@ -374,7 +435,30 @@ export function AssessmentsView({
       readinessPointsDelta: pointsDelta,
     };
 
-    if (activeDayDomainKey) {
+    if (isLevelUpMode) {
+      const isPassed = scorePct >= LEVEL_UP_PASSING_PERCENTAGE;
+      const updatedLevelUp = {
+        ...levelUpHistory,
+        [activeLevelUpSchedule?.id || 'level_up_day_1']: {
+          score: correctCount,
+          total: pool.length,
+          percentage: scorePct,
+          passed: isPassed,
+          completedAt: new Date().toISOString(),
+        },
+      };
+      setLevelUpHistory(updatedLevelUp);
+      try {
+        localStorage.setItem('placement_level_up_history', JSON.stringify(updatedLevelUp));
+      } catch (e) {
+        console.error('Failed to save level up history:', e);
+      }
+      if (isPassed) {
+        pointsDelta += 300; // FAANG Elite Level Up Certification bonus
+      }
+    }
+
+    if (activeDayDomainKey && !isLevelUpMode) {
       const updatedHistory = {
         ...dayTestsHistory,
         [activeDayDomainKey]: {
@@ -535,12 +619,36 @@ export function AssessmentsView({
   const currentQ = pool[currentQuestionIndex] || pool[0];
 
   return (
-    <div className="space-y-4 pb-20 max-w-lg mx-auto text-white">
-      {/* Primary Sub-Tab Switcher: Assessments vs Interview Tips vs Coding Arena */}
+    <div className="space-y-4 pb-20 max-w-xl md:max-w-2xl mx-auto text-white">
+      {/* Primary Sub-Tab Switcher: Level Up vs Placement Mocks vs Interview Tips vs Coding Arena */}
       <div className="flex bg-black p-1 rounded-2xl border-2 border-amber-500/40 shadow-lg gap-1">
         <button
+          id="assessment-tab-levelup"
+          onClick={() => {
+            setActiveSubTab('levelup');
+            setAssessmentMode('level_up');
+            setIsTestActive(false);
+            setTestResult(null);
+            setCustomTestPool(null);
+          }}
+          className={`flex-1 py-2 px-1 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            activeSubTab === 'levelup'
+              ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 text-slate-950 shadow-md shadow-rose-500/30'
+              : 'text-rose-400 hover:text-rose-300'
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 fill-current animate-pulse shrink-0" />
+          <span className="truncate">Level Up 100</span>
+        </button>
+        <button
           id="assessment-tab-aptitude"
-          onClick={() => setActiveSubTab('aptitude')}
+          onClick={() => {
+            setActiveSubTab('aptitude');
+            if (assessmentMode === 'level_up') setAssessmentMode('day_wise');
+            setIsTestActive(false);
+            setTestResult(null);
+            setCustomTestPool(null);
+          }}
           className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeSubTab === 'aptitude'
               ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
@@ -552,7 +660,12 @@ export function AssessmentsView({
         </button>
         <button
           id="assessment-tab-tips"
-          onClick={() => setActiveSubTab('tips')}
+          onClick={() => {
+            setActiveSubTab('tips');
+            setIsTestActive(false);
+            setTestResult(null);
+            setCustomTestPool(null);
+          }}
           className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeSubTab === 'tips'
               ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
@@ -564,7 +677,12 @@ export function AssessmentsView({
         </button>
         <button
           id="assessment-tab-coding"
-          onClick={() => setActiveSubTab('coding')}
+          onClick={() => {
+            setActiveSubTab('coding');
+            setIsTestActive(false);
+            setTestResult(null);
+            setCustomTestPool(null);
+          }}
           className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeSubTab === 'coding'
               ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
@@ -577,27 +695,51 @@ export function AssessmentsView({
       </div>
 
       {/* ============================================================== */}
-      {/* SUB-TAB 1: ASSESSMENT MODULES & EXAM ENGINE */}
+      {/* SUB-TAB 0: LEVEL UP 100-MCQ ASSESSMENTS (95% PASSING SCORE)   */}
       {/* ============================================================== */}
-      {activeSubTab === 'aptitude' && (
+      {activeSubTab === 'levelup' && !isTestActive && !testResult && (
         <div className="space-y-4">
-          {/* Sub-Mode Switcher: Day-Wise Placement Mocks vs Standard Practice Bank */}
-          {!isTestActive && !testResult && (
-            <div className="flex bg-black p-1 rounded-2xl border border-neutral-800 shadow-md">
+          <LevelUpAssessmentSelector
+            onStartLevelUpTest={handleStartLevelUpTest}
+            levelUpHistory={levelUpHistory}
+          />
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SUB-TAB 1: ASSESSMENT MODULES & EXAM ENGINE (MOCKS & LEVEL UP) */}
+      {/* ============================================================== */}
+      {(activeSubTab === 'aptitude' || (activeSubTab === 'levelup' && (isTestActive || testResult))) && (
+        <div className="space-y-4">
+          {/* Sub-Mode Switcher: Day-Wise Placement Mocks vs Level Up vs Standard Practice Bank */}
+          {!isTestActive && !testResult && activeSubTab === 'aptitude' && (
+            <div className="flex bg-black p-1 rounded-2xl border border-neutral-800 shadow-md gap-1">
+              <button
+                id="assessment-mode-levelup-btn"
+                onClick={() => {
+                  setActiveSubTab('levelup');
+                  setAssessmentMode('level_up');
+                  setCustomTestPool(null);
+                }}
+                className="flex-1 py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer text-rose-400 hover:text-rose-300 hover:bg-neutral-900"
+              >
+                <Flame className="w-3.5 h-3.5 fill-current animate-pulse text-rose-400" />
+                <span className="truncate">Level Up 100</span>
+              </button>
               <button
                 id="assessment-mode-daywise-btn"
                 onClick={() => {
                   setAssessmentMode('day_wise');
                   setCustomTestPool(null);
                 }}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   assessmentMode === 'day_wise'
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
                     : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Day-Wise Placement Mocks</span>
+                <span className="truncate">Day Mocks</span>
               </button>
               <button
                 id="assessment-mode-modules-btn"
@@ -605,14 +747,14 @@ export function AssessmentsView({
                   setAssessmentMode('modules');
                   setCustomTestPool(null);
                 }}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   assessmentMode === 'modules'
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/20'
                     : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Practice Question Bank</span>
+                <span className="truncate">Question Bank</span>
               </button>
             </div>
           )}
@@ -876,6 +1018,127 @@ export function AssessmentsView({
                 </div>
               </div>
 
+              {/* LEVEL UP ASSESSMENT BANNER (95% PASSING SCORE) */}
+              {isLevelUpMode && (
+                <div className="bg-gradient-to-r from-rose-950/80 via-slate-900 to-amber-950/40 border border-rose-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-rose-400 shrink-0 animate-pulse" />
+                    <div>
+                      <span className="text-xs font-black text-rose-300 block">
+                        FAANG Level Up Assessment • 100 Non-Repeated MCQs
+                      </span>
+                      <span className="text-[10px] text-slate-300">
+                        Strict Passing Cutoff: <strong className="text-amber-300 font-black">95% (95/100 correct)</strong> • FAANG Tier-1 Standard
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-black">
+                      Cutoff: 95%
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black">
+                      {Object.keys(selectedAnswers).length}/100 Answered
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* 100-MCQ MATRIX PALETTE (Collapsible for Level Up Tests) */}
+              {isLevelUpMode && (
+                <div className="bg-neutral-950 border border-rose-500/30 rounded-xl p-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setShowLevelUpPaletteDrawer(!showLevelUpPaletteDrawer)}
+                      className="flex items-center gap-2 text-xs font-black text-rose-300 hover:text-rose-200 cursor-pointer"
+                    >
+                      <Layers className="w-4 h-4 text-rose-400" />
+                      <span>
+                        100-MCQ Question Matrix ({Object.keys(selectedAnswers).length}/100 Answered)
+                      </span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform ${
+                          showLevelUpPaletteDrawer ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    <div className="flex items-center gap-2 text-[10px] font-bold">
+                      <span className="text-emerald-400">
+                        ● {Object.keys(selectedAnswers).length} Done
+                      </span>
+                      <span className="text-amber-400">
+                        ● {Object.values(markedForReview).filter(Boolean).length} Flagged
+                      </span>
+                      <span className="text-slate-400">
+                        ● {pool.length - Object.keys(selectedAnswers).length} Left
+                      </span>
+                    </div>
+                  </div>
+
+                  {showLevelUpPaletteDrawer && (
+                    <div className="space-y-2.5 pt-2 border-t border-neutral-900">
+                      <div className="flex flex-wrap gap-1">
+                        {(['all', 'answered', 'unanswered', 'marked'] as const).map((filter) => {
+                          const count =
+                            filter === 'all'
+                              ? pool.length
+                              : filter === 'answered'
+                              ? Object.keys(selectedAnswers).length
+                              : filter === 'unanswered'
+                              ? pool.length - Object.keys(selectedAnswers).length
+                              : Object.values(markedForReview).filter(Boolean).length;
+                          return (
+                            <button
+                              key={filter}
+                              type="button"
+                              onClick={() => setLevelUpPaletteFilter(filter)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                                levelUpPaletteFilter === filter
+                                  ? 'bg-rose-500 text-white font-black'
+                                  : 'bg-neutral-900 text-neutral-400 hover:text-white'
+                              }`}
+                            >
+                              {filter} ({count})
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="grid grid-cols-10 gap-1.5 max-h-48 overflow-y-auto p-1.5 bg-black rounded-lg border border-neutral-800">
+                        {pool.map((q, idx) => {
+                          const isAnswered = selectedAnswers[q.id] !== undefined;
+                          const isMarked = markedForReview[q.id];
+                          const isCurrent = idx === currentQuestionIndex;
+
+                          if (levelUpPaletteFilter === 'answered' && !isAnswered) return null;
+                          if (levelUpPaletteFilter === 'unanswered' && isAnswered) return null;
+                          if (levelUpPaletteFilter === 'marked' && !isMarked) return null;
+
+                          let btnStyle = 'bg-neutral-900 text-neutral-400 border-neutral-800';
+                          if (isCurrent)
+                            btnStyle = 'ring-2 ring-amber-400 bg-amber-500/40 text-amber-200 border-amber-400 font-black';
+                          else if (isMarked)
+                            btnStyle = 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold';
+                          else if (isAnswered)
+                            btnStyle = 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40 font-bold';
+
+                          return (
+                            <button
+                              key={q.id}
+                              type="button"
+                              onClick={() => setCurrentQuestionIndex(idx)}
+                              className={`h-7 rounded text-[11px] font-semibold border flex items-center justify-center transition-all cursor-pointer ${btnStyle}`}
+                            >
+                              {idx + 1}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Question Navigation Drawer / Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {pool.map((q, idx) => {
@@ -987,7 +1250,26 @@ export function AssessmentsView({
               )}
 
               {/* Question Statement */}
-              <div className="bg-neutral-950 p-4 rounded-xl border border-amber-500/30">
+              <div className="bg-neutral-950 p-4 rounded-xl border border-amber-500/30 space-y-2">
+                {((currentQ as any).company || (currentQ as any).domain) && (
+                  <div className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-neutral-900 text-[10px]">
+                    {(currentQ as any).company && (
+                      <span className="px-2 py-0.5 rounded font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                        🏢 {(currentQ as any).company}
+                      </span>
+                    )}
+                    {(currentQ as any).domain && (
+                      <span className="px-2 py-0.5 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        {(currentQ as any).domain}
+                      </span>
+                    )}
+                    {(currentQ as any).difficulty && (
+                      <span className="px-2 py-0.5 rounded font-bold bg-neutral-900 text-neutral-300 border border-neutral-800 uppercase">
+                        {(currentQ as any).difficulty}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs sm:text-sm font-medium text-white whitespace-pre-line leading-relaxed">
                   {currentQ.question}
                 </p>
@@ -1133,6 +1415,77 @@ export function AssessmentsView({
                 </span>
               </div>
 
+              {/* LEVEL UP 95% PASS/FAIL EVALUATION CARD */}
+              {isLevelUpMode && (
+                <div
+                  className={`p-4 rounded-2xl border-2 space-y-3 ${
+                    testResult.scorePercentage >= 95
+                      ? 'bg-gradient-to-br from-emerald-950/80 via-black to-amber-950/40 border-emerald-400 text-emerald-200 shadow-lg shadow-emerald-500/10'
+                      : 'bg-gradient-to-br from-rose-950/80 via-black to-neutral-950 border-rose-500/60 text-rose-200 shadow-lg shadow-rose-500/10'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0 ${
+                          testResult.scorePercentage >= 95
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400'
+                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                        }`}
+                      >
+                        {testResult.scorePercentage >= 95 ? '🏆' : '⚠️'}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white uppercase tracking-wide">
+                          {testResult.scorePercentage >= 95
+                            ? 'PASSED! LEVEL UP FAANG ELITE CERTIFIED'
+                            : 'DID NOT CLEAR LEVEL UP THRESHOLD (95% REQUIRED)'}
+                        </h4>
+                        <p className="text-[11px] text-slate-300 mt-0.5">
+                          {testResult.scorePercentage >= 95
+                            ? `Outstanding performance! Your score of ${testResult.scorePercentage}% (${testResult.correctAnswers}/100) meets or exceeds the strict 95% FAANG Tier-1 bar. +300 FAANG Elite Bonus XP awarded!`
+                            : `Strict passing cutoff is 95% (95/100 correct). You scored ${testResult.scorePercentage}% (${testResult.correctAnswers}/100). Deficit: ${95 - testResult.correctAnswers} more correct answers needed to clear FAANG benchmark.`}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-black shrink-0 uppercase border ${
+                        testResult.scorePercentage >= 95
+                          ? 'bg-emerald-500 text-black border-emerald-400'
+                          : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                      }`}
+                    >
+                      {testResult.scorePercentage >= 95 ? 'Passed (≥95%)' : 'Failed (<95%)'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/10 text-center text-xs">
+                    <div className="bg-black/60 p-2 rounded-lg border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase block font-semibold">Requirement</span>
+                      <span className="font-black text-amber-300">95% (95/100)</span>
+                    </div>
+                    <div className="bg-black/60 p-2 rounded-lg border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase block font-semibold">Your Score</span>
+                      <span className={`font-black ${testResult.scorePercentage >= 95 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {testResult.scorePercentage}%
+                      </span>
+                    </div>
+                    <div className="bg-black/60 p-2 rounded-lg border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase block font-semibold">FAANG Bonus</span>
+                      <span className="font-black text-amber-300">
+                        {testResult.scorePercentage >= 95 ? '+300 XP Earned' : '0 XP (Cutoff 95%)'}
+                      </span>
+                    </div>
+                    <div className="bg-black/60 p-2 rounded-lg border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase block font-semibold">Daily Assessment</span>
+                      <span className="font-black text-white truncate block">
+                        {activeLevelUpSchedule?.releaseDate || 'Today'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Metrics Grid */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-neutral-950 p-2.5 rounded-xl border border-neutral-800 text-center">
@@ -1241,7 +1594,25 @@ export function AssessmentsView({
                     <span>Retake</span>
                   </button>
                 )}
-                {assessmentMode === 'day_wise' && (
+                {isLevelUpMode && (
+                  <button
+                    onClick={() => {
+                      setTestResult(null);
+                      setIsTestActive(false);
+                      setIsLevelUpMode(false);
+                      setActiveLevelUpSchedule(null);
+                      setCustomTestPool(null);
+                      setCustomTestTitle(null);
+                      setActiveSubTab('levelup');
+                      setAssessmentMode('level_up');
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-950 via-neutral-900 to-amber-950 hover:bg-neutral-800 text-rose-300 border border-rose-500/40 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md"
+                  >
+                    <Flame className="w-4 h-4 text-rose-400" />
+                    <span>Return to Level Up 100 Hub (Daily Schedule)</span>
+                  </button>
+                )}
+                {assessmentMode === 'day_wise' && !isLevelUpMode && (
                   <button
                     onClick={() => {
                       setTestResult(null);
@@ -1274,9 +1645,25 @@ export function AssessmentsView({
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span className="font-bold text-white">
-                            Q{idx + 1}. {q.topic}
-                          </span>
+                          <div>
+                            <span className="font-bold text-white">
+                              Q{idx + 1}. {q.topic}
+                            </span>
+                            {((q as any).company || (q as any).domain) && (
+                              <div className="flex items-center gap-1.5 mt-1 text-[10px]">
+                                {(q as any).company && (
+                                  <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
+                                    🏢 {(q as any).company}
+                                  </span>
+                                )}
+                                {(q as any).domain && (
+                                  <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                                    {(q as any).domain}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           {isCorrect ? (
                             <span className="flex items-center gap-1 text-[11px] text-amber-400 font-black">
                               <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" /> Correct
