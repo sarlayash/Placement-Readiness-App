@@ -500,8 +500,8 @@ export function ProfileView({
                     <h4 className="text-xs font-black uppercase tracking-wider text-amber-300 font-['Outfit',sans-serif]">
                       Cash Rewards & UPI Payout Credentials
                     </h4>
-                    <p className="text-[10px] text-slate-400">
-                      500 XP = ₹100 INR • Direct instant transfer
+                    <p className="text-[10px] text-amber-200/90 font-bold">
+                      500 XP = ₹100 INR • ALL REWARDS WILL BE PAID ON DIWALI 2026.
                     </p>
                   </div>
                 </div>
@@ -579,7 +579,7 @@ export function ProfileView({
                 <div>
                   <strong className="text-amber-300">Sign-Up Milestone:</strong> Each new learner gets an automatic{' '}
                   <strong className="text-emerald-300">₹200 INR</strong> bonus once you sign up and reach{' '}
-                  <strong className="text-sky-300">500 XP</strong>!
+                  <strong className="text-sky-300">500 XP</strong>! (Notice: All accumulated rewards will be paid on <strong className="text-amber-300 font-bold">Diwali 2026</strong>).
                 </div>
               </div>
             </div>

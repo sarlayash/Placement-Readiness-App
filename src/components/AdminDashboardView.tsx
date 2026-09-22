@@ -567,8 +567,8 @@ export function AdminDashboardView({
               <h3 className="text-xs font-black uppercase tracking-wider text-amber-300 font-['Outfit',sans-serif]">
                 UPI Rewards & Cash Payouts Command Center
               </h3>
-              <p className="text-[10px] text-neutral-400">
-                Rule: 500 XP = ₹100 INR • ₹200 Welcome Bonus on 500 XP
+              <p className="text-[10px] text-amber-300 font-bold">
+                Rule: 500 XP = ₹100 INR • ₹200 Welcome Bonus • NOTICE: ALL REWARDS WILL BE PAID ON DIWALI 2026.
               </p>
             </div>
           </div>

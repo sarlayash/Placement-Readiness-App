@@ -308,6 +308,29 @@ export function RewardsModal({
           </button>
         </div>
 
+        {/* Official Diwali 2026 Payout Notice */}
+        <div
+          id="rewards-modal-diwali-notice"
+          className="mt-3.5 p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/25 to-yellow-500/15 border-2 border-amber-400/60 shadow-md shadow-amber-950/40 flex items-start gap-2.5"
+        >
+          <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+            <Gift className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                Official Payout Notice
+              </span>
+              <h4 className="text-xs font-black uppercase text-amber-200 tracking-wider">
+                ALL REWARDS WILL BE PAID ON DIWALI 2026.
+              </h4>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+              Keep learning and redeeming your points. All accumulated cashouts, ₹200 sign-up milestone bonuses, and rewards will be transferred directly to your registered UPI ID on <strong className="text-amber-300 font-bold">Diwali 2026</strong>.
+            </p>
+          </div>
+        </div>
+
         {/* Feedback Messages */}
         {successMessage && (
           <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">

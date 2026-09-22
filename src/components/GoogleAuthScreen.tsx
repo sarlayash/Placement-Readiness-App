@@ -9,6 +9,7 @@ import {
   Trophy,
   AlertCircle,
   Loader2,
+  Gift,
 } from 'lucide-react';
 import { signInWithGoogle } from '../lib/firebase';
 
@@ -65,6 +66,34 @@ export function GoogleAuthScreen({ onSignedIn }: GoogleAuthScreenProps) {
           <p className="text-xs text-slate-400 leading-relaxed">
             Real algorithmic evaluations, timed sectional aptitude drills, and verified Placement Readiness Scores. All progress securely synced to your verified Google account.
           </p>
+        </div>
+
+        {/* Official Notice: Rewards Paid on Diwali 2026 */}
+        <div
+          id="landing-diwali-rewards-notice"
+          className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/25 to-yellow-500/15 border-2 border-amber-400/60 shadow-lg shadow-amber-950/40 relative overflow-hidden"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 mt-0.5">
+              <Gift className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-sans">
+                  Official Notice
+                </span>
+                <span className="text-[10px] font-bold text-amber-300">
+                  500 XP = ₹100 INR • ₹200 Sign-Up Bonus
+                </span>
+              </div>
+              <h3 className="text-xs sm:text-sm font-black text-amber-200 tracking-wide font-['Outfit',sans-serif]">
+                ALL REWARDS WILL BE PAID ON DIWALI 2026.
+              </h3>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Earn XP in mock tests & coding drills to claim cash into your UPI account. All verified learner rewards and milestone bonuses will be disbursed on <strong className="text-amber-300 font-bold">Diwali 2026</strong>.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Value Highlights */}

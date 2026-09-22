@@ -83,6 +83,42 @@ export function DashboardView({
         </div>
       </div>
 
+      {/* Official Rewards Notice Banner: ALL REWARDS WILL BE PAID ON DIWALI 2026 */}
+      <div
+        id="dashboard-diwali-rewards-notice-banner"
+        className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/25 to-yellow-500/15 border-2 border-amber-400/60 shadow-lg shadow-amber-950/30 flex items-center justify-between gap-3 flex-wrap"
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 mt-0.5">
+            <Gift className="w-5 h-5 stroke-[2.5]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                Official Notice
+              </span>
+              <span className="text-[10px] font-bold text-amber-300">
+                500 XP = ₹100 INR • ₹200 Sign-Up Bonus
+              </span>
+            </div>
+            <h3 className="text-xs sm:text-sm font-black text-amber-200 tracking-wide font-['Outfit',sans-serif] mt-0.5">
+              ALL REWARDS WILL BE PAID ON DIWALI 2026.
+            </h3>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Accumulate XP in aptitude tests & coding problems. All verified cashouts will be disbursed directly to your registered UPI ID on <strong className="text-amber-300 font-bold">Diwali 2026</strong>.
+            </p>
+          </div>
+        </div>
+        {onOpenRewards && (
+          <button
+            onClick={onOpenRewards}
+            className="text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/20 transition-all cursor-pointer shrink-0 ml-auto"
+          >
+            Rewards Hub
+          </button>
+        )}
+      </div>
+
       {/* Primary Hero: PLACEMENT READINESS INDEX (PRI) on Scale 1 to 100 */}
       <div
         id="placement-readiness-index-card"
@@ -203,11 +239,11 @@ export function DashboardView({
                   Rewards & UPI Cashouts
                 </h3>
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                  500 XP = ₹100 INR
+                  500 XP = ₹100 INR • Diwali 2026 Payout
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 mt-0.5">
-                Direct bank transfers sent to your registered UPI ID
+              <p className="text-[10px] text-slate-300 mt-0.5">
+                Direct transfers to your UPI ID — <strong className="text-amber-300 font-black">ALL REWARDS WILL BE PAID ON DIWALI 2026.</strong>
               </p>
             </div>
           </div>
