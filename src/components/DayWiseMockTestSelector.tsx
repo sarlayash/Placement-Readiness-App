@@ -44,6 +44,7 @@ import {
   Glasses,
   Navigation,
   Rocket,
+  Zap,
 } from 'lucide-react';
 import { AptitudeQuestion, AssessmentCategory } from '../types';
 import {
@@ -63,6 +64,7 @@ interface DayWiseMockTestSelectorProps {
 type TrackFilterCluster =
   | 'all'
   | 'it_curriculum'
+  | 'cloud_native_sys'
   | 'specialized'
   | 'core_infra'
   | 'cloud_infra'
@@ -88,6 +90,24 @@ export function DayWiseMockTestSelector({
 
   const getDomainIcon = (category: AssessmentCategory) => {
     switch (category) {
+      // Day 6 & 7 Cloud-Native & Grand Finale Tracks
+      case 'microservices_architecture':
+        return Workflow;
+      case 'distributed_caching':
+        return Zap;
+      case 'event_driven_kafka':
+        return Radio;
+      case 'api_gateways':
+        return Network;
+      case 'system_design_architecture':
+        return Target;
+      case 'database_sharding':
+        return Database;
+      case 'finops_cloud_economics':
+        return BarChart3;
+      case 'executive_viva_leadership':
+        return Award;
+
       // 20 IT & Emerging Tech Curriculum Domains
       case 'it_fundamentals':
         return Laptop;
@@ -224,12 +244,26 @@ export function DayWiseMockTestSelector({
     'service_delivery_ops',
   ];
 
+  // Cloud-Native & Grand Finale categories for Days 6 & 7
+  const cloudNativeCategories: AssessmentCategory[] = [
+    'microservices_architecture',
+    'distributed_caching',
+    'event_driven_kafka',
+    'api_gateways',
+    'system_design_architecture',
+    'database_sharding',
+    'finops_cloud_economics',
+    'executive_viva_leadership',
+  ];
+
   // Filter domains based on active cluster & search query
   const filteredDomains = useMemo(() => {
     return currentPack.domains.filter((domain) => {
       // Filter by cluster
       if (trackCluster === 'it_curriculum') {
         if (!itCurriculumCategories.includes(domain.category)) return false;
+      } else if (trackCluster === 'cloud_native_sys') {
+        if (!cloudNativeCategories.includes(domain.category)) return false;
       } else if (trackCluster === 'core_infra') {
         const coreInfra: AssessmentCategory[] = [
           'windows_endpoint',
@@ -349,6 +383,8 @@ export function DayWiseMockTestSelector({
             const isSelected = activeDay === pack.dayNumber;
             const isDay4Specialized = pack.dayNumber === 4;
             const isDay5Frontier = pack.dayNumber === 5;
+            const isDay6CloudNative = pack.dayNumber === 6;
+            const isDay7GrandFinale = pack.dayNumber === 7;
             return (
               <button
                 key={pack.dayNumber}
@@ -360,6 +396,10 @@ export function DayWiseMockTestSelector({
                 className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
                   isSelected
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/25 ring-2 ring-amber-300'
+                    : isDay7GrandFinale
+                    ? 'bg-neutral-900 text-rose-300 border border-rose-500/40 hover:border-rose-400'
+                    : isDay6CloudNative
+                    ? 'bg-neutral-900 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400'
                     : isDay5Frontier
                     ? 'bg-neutral-900 text-purple-300 border border-purple-500/40 hover:border-purple-400'
                     : isDay4Specialized
@@ -371,6 +411,10 @@ export function DayWiseMockTestSelector({
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     isSelected
                       ? 'bg-black'
+                      : isDay7GrandFinale
+                      ? 'bg-rose-400 animate-pulse'
+                      : isDay6CloudNative
+                      ? 'bg-cyan-400 animate-pulse'
                       : isDay5Frontier
                       ? 'bg-purple-400 animate-pulse'
                       : isDay4Specialized
@@ -379,7 +423,27 @@ export function DayWiseMockTestSelector({
                   }`}
                 />
                 <span>Day {pack.dayNumber}</span>
-                {isDay5Frontier ? (
+                {isDay7GrandFinale ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                      isSelected
+                        ? 'bg-black text-rose-300'
+                        : 'bg-rose-500/25 text-rose-300 border border-rose-500/40'
+                    }`}
+                  >
+                    Grand Finale 🏆
+                  </span>
+                ) : isDay6CloudNative ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                      isSelected
+                        ? 'bg-black text-cyan-300'
+                        : 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40'
+                    }`}
+                  >
+                    Cloud Native ⚡
+                  </span>
+                ) : isDay5Frontier ? (
                   <span
                     className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
                       isSelected
@@ -490,9 +554,9 @@ export function DayWiseMockTestSelector({
         </div>
       </div>
 
-      {/* Day-Wise 5 Placement & Interview Tips (Day 1, Day 2, Day 3 & Extensible) */}
+      {/* Day-Wise 5 Placement & Interview Tips (Day 1 to Day 7) */}
       <DayWiseInterviewTipsCard
-        currentDay={Math.min(3, activeDay)}
+        currentDay={activeDay}
         onSelectDay={(day) => setActiveDay(day)}
       />
 
@@ -525,6 +589,7 @@ export function DayWiseMockTestSelector({
           {[
             { id: 'all', label: `All Tracks (${currentPack.domains.length})` },
             { id: 'it_curriculum', label: '🎓 IT & Emerging Tech (Days 1–5)' },
+            { id: 'cloud_native_sys', label: '⚡ Cloud-Native & System Design (Days 6–7)' },
             { id: 'core_infra', label: '⭐ Core 7 Infra & Ops' },
             { id: 'specialized', label: '🔥 All 10 Specialized Systems' },
             { id: 'cloud_infra', label: 'Cloud & Infrastructure' },

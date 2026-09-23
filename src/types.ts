@@ -85,7 +85,16 @@ export type AssessmentCategory =
   | 'ai_ml_core'
   | 'genai_chatgpt'
   | 'blockchain_web3'
-  | 'ar_vr_mr_spatial';
+  | 'ar_vr_mr_spatial'
+  // Day 6 & 7 Cloud-Native & Grand Finale Tracks
+  | 'microservices_architecture'
+  | 'distributed_caching'
+  | 'event_driven_kafka'
+  | 'api_gateways'
+  | 'system_design_architecture'
+  | 'database_sharding'
+  | 'finops_cloud_economics'
+  | 'executive_viva_leadership';
 
 export type AptitudeCategory = AssessmentCategory;
 

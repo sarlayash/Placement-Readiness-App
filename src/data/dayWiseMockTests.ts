@@ -1793,13 +1793,20 @@ export const ALL_DAY_5_QUESTIONS: AptitudeQuestion[] = DAY_5_MOCK_TEST_PACK.doma
   (d) => d.questions
 );
 
-// Extensible Day Registry: Day 1 to Day 5 all fully active
+import { DAY_6_MOCK_TEST_PACK, ALL_DAY_6_QUESTIONS } from './day6MockTests';
+import { DAY_7_MOCK_TEST_PACK, ALL_DAY_7_QUESTIONS } from './day7MockTests';
+
+export { DAY_6_MOCK_TEST_PACK, ALL_DAY_6_QUESTIONS, DAY_7_MOCK_TEST_PACK, ALL_DAY_7_QUESTIONS };
+
+// Extensible Day Registry: Day 1 to Day 7 all fully active
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
   DAY_2_MOCK_TEST_PACK,
   DAY_3_MOCK_TEST_PACK,
   DAY_4_MOCK_TEST_PACK,
   DAY_5_MOCK_TEST_PACK,
+  DAY_6_MOCK_TEST_PACK,
+  DAY_7_MOCK_TEST_PACK,
 ];
 
 // Helper to flatten all Day 1 questions into a combined question bank
