@@ -23,6 +23,7 @@ import {
 
 import { DayMockTestPack } from './dayWiseMockTests';
 import { AptitudeQuestion } from '../types';
+import { DAY_2_CURRICULUM_DOMAINS } from './itCurriculumDays/day2';
 
 export {
   DAY_2_VERBAL_QUESTIONS,
@@ -176,6 +177,7 @@ export const DAY_2_MOCK_TEST_PACK: DayMockTestPack = {
       targetRoles: ['Consulting', 'Product Firms', 'Cognitive Ability Rounds'],
       questions: DAY_2_LOGICAL_QUESTIONS,
     },
+    ...DAY_2_CURRICULUM_DOMAINS,
   ],
 };
 

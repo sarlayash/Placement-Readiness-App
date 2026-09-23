@@ -64,7 +64,28 @@ export type AssessmentCategory =
   | 'observability_aiops'
   | 'servicenow_automation'
   | 'ai_architecture'
-  | 'service_delivery_ops';
+  | 'service_delivery_ops'
+  // Core IT & Engineering Curriculum Domains
+  | 'it_fundamentals'
+  | 'computer_organization'
+  | 'c_programming'
+  | 'ms_office'
+  | 'operating_systems'
+  | 'database_management'
+  | 'web_development'
+  | 'networking_foundations'
+  | 'sdlc_project_lifecycle'
+  | 'agile_devops'
+  | 'it_roles_infrastructure'
+  | 'virtualization_cloud'
+  | 'information_security'
+  | 'iot_embedded_systems'
+  | 'drones_uav_tech'
+  | 'industry5_3d_printing'
+  | 'ai_ml_core'
+  | 'genai_chatgpt'
+  | 'blockchain_web3'
+  | 'ar_vr_mr_spatial';
 
 export type AptitudeCategory = AssessmentCategory;
 

@@ -36,6 +36,14 @@ import {
   Cpu,
   Briefcase,
   X,
+  Globe,
+  GitBranch,
+  Box,
+  Blocks,
+  Radio,
+  Glasses,
+  Navigation,
+  Rocket,
 } from 'lucide-react';
 import { AptitudeQuestion, AssessmentCategory } from '../types';
 import {
@@ -52,7 +60,15 @@ interface DayWiseMockTestSelectorProps {
   completedTestsHistory?: Record<string, { score: number; total: number; percentage: number }>;
 }
 
-type TrackFilterCluster = 'all' | 'specialized' | 'core_infra' | 'cloud_infra' | 'cyber_data' | 'ai_automation' | 'aptitude_soft';
+type TrackFilterCluster =
+  | 'all'
+  | 'it_curriculum'
+  | 'specialized'
+  | 'core_infra'
+  | 'cloud_infra'
+  | 'cyber_data'
+  | 'ai_automation'
+  | 'aptitude_soft';
 
 export function DayWiseMockTestSelector({
   onStartDomainTest,
@@ -60,7 +76,7 @@ export function DayWiseMockTestSelector({
   onStartDiagnosticTest,
   completedTestsHistory = {},
 }: DayWiseMockTestSelectorProps) {
-  const [activeDay, setActiveDay] = useState<number>(4); // Default to Day 4 for instant discovery of the 10 new domains
+  const [activeDay, setActiveDay] = useState<number>(1); // Default to Day 1
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [trackCluster, setTrackCluster] = useState<TrackFilterCluster>('all');
   const [showAddDayModal, setShowAddDayModal] = useState<boolean>(false);
@@ -72,6 +88,48 @@ export function DayWiseMockTestSelector({
 
   const getDomainIcon = (category: AssessmentCategory) => {
     switch (category) {
+      // 20 IT & Emerging Tech Curriculum Domains
+      case 'it_fundamentals':
+        return Laptop;
+      case 'computer_organization':
+        return Cpu;
+      case 'c_programming':
+        return Code2;
+      case 'ms_office':
+        return FileSpreadsheet;
+      case 'operating_systems':
+        return Terminal;
+      case 'database_management':
+        return Database;
+      case 'web_development':
+        return Globe;
+      case 'networking_foundations':
+        return Network;
+      case 'sdlc_project_lifecycle':
+        return Workflow;
+      case 'agile_devops':
+        return GitBranch;
+      case 'it_roles_infrastructure':
+        return Briefcase;
+      case 'virtualization_cloud':
+        return Cloud;
+      case 'information_security':
+        return Shield;
+      case 'industry5_3d_printing':
+        return Box;
+      case 'ai_ml_core':
+        return BrainCircuit;
+      case 'genai_chatgpt':
+        return Sparkle;
+      case 'blockchain_web3':
+        return Blocks;
+      case 'iot_embedded_systems':
+        return Radio;
+      case 'ar_vr_mr_spatial':
+        return Glasses;
+      case 'drones_uav_tech':
+        return Navigation;
+
       // 10 Specialized Engineering Domains
       case 'windows_endpoint':
         return Laptop;
@@ -128,6 +186,30 @@ export function DayWiseMockTestSelector({
     }
   };
 
+  // IT & Emerging Tech categories set
+  const itCurriculumCategories: AssessmentCategory[] = [
+    'it_fundamentals',
+    'computer_organization',
+    'c_programming',
+    'ms_office',
+    'operating_systems',
+    'database_management',
+    'web_development',
+    'networking_foundations',
+    'sdlc_project_lifecycle',
+    'agile_devops',
+    'it_roles_infrastructure',
+    'virtualization_cloud',
+    'information_security',
+    'iot_embedded_systems',
+    'drones_uav_tech',
+    'industry5_3d_printing',
+    'ai_ml_core',
+    'genai_chatgpt',
+    'blockchain_web3',
+    'ar_vr_mr_spatial',
+  ];
+
   // Specialized categories set for filtering
   const specializedCategories: AssessmentCategory[] = [
     'windows_endpoint',
@@ -146,7 +228,9 @@ export function DayWiseMockTestSelector({
   const filteredDomains = useMemo(() => {
     return currentPack.domains.filter((domain) => {
       // Filter by cluster
-      if (trackCluster === 'core_infra') {
+      if (trackCluster === 'it_curriculum') {
+        if (!itCurriculumCategories.includes(domain.category)) return false;
+      } else if (trackCluster === 'core_infra') {
         const coreInfra: AssessmentCategory[] = [
           'windows_endpoint',
           'linux_automation',
@@ -264,6 +348,7 @@ export function DayWiseMockTestSelector({
           {ALL_DAY_MOCK_TESTS.map((pack) => {
             const isSelected = activeDay === pack.dayNumber;
             const isDay4Specialized = pack.dayNumber === 4;
+            const isDay5Frontier = pack.dayNumber === 5;
             return (
               <button
                 key={pack.dayNumber}
@@ -275,6 +360,8 @@ export function DayWiseMockTestSelector({
                 className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
                   isSelected
                     ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 text-black shadow-md shadow-amber-500/25 ring-2 ring-amber-300'
+                    : isDay5Frontier
+                    ? 'bg-neutral-900 text-purple-300 border border-purple-500/40 hover:border-purple-400'
                     : isDay4Specialized
                     ? 'bg-neutral-900 text-amber-300 border border-amber-500/40 hover:border-amber-400'
                     : 'bg-neutral-900 text-neutral-300 border border-neutral-800 hover:text-white hover:border-neutral-700'
@@ -284,13 +371,25 @@ export function DayWiseMockTestSelector({
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     isSelected
                       ? 'bg-black'
+                      : isDay5Frontier
+                      ? 'bg-purple-400 animate-pulse'
                       : isDay4Specialized
                       ? 'bg-amber-400 animate-pulse'
                       : 'bg-emerald-400'
                   }`}
                 />
                 <span>Day {pack.dayNumber}</span>
-                {isDay4Specialized ? (
+                {isDay5Frontier ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                      isSelected
+                        ? 'bg-black text-amber-300'
+                        : 'bg-purple-500/25 text-purple-300 border border-purple-500/40'
+                    }`}
+                  >
+                    Emerging Tech 🚀
+                  </span>
+                ) : isDay4Specialized ? (
                   <span
                     className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
                       isSelected
@@ -298,7 +397,7 @@ export function DayWiseMockTestSelector({
                         : 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
                     }`}
                   >
-                    10 New Tracks 🔥
+                    14 Tracks 🔥
                   </span>
                 ) : (
                   <span
@@ -308,7 +407,7 @@ export function DayWiseMockTestSelector({
                         : 'bg-neutral-800 text-neutral-400'
                     }`}
                   >
-                    Live
+                    Day {pack.dayNumber}
                   </span>
                 )}
               </button>
@@ -337,9 +436,14 @@ export function DayWiseMockTestSelector({
               <span className="text-xs font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider">
                 Day {currentPack.dayNumber} Curriculum
               </span>
+              {activeDay === 5 && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase tracking-wider">
+                  Industry 5.0 • AI/ML • GenAI • Blockchain • AR/VR • 3D Printing
+                </span>
+              )}
               {activeDay === 4 && (
                 <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider">
-                  Windows • Linux • Cloud • Cyber • IAM • AIOps
+                  Virtualization • Cloud • InfoSec • IoT • Drones • Endpoint • IAM
                 </span>
               )}
               <span className="text-[11px] text-neutral-400 font-medium">
@@ -420,6 +524,7 @@ export function DayWiseMockTestSelector({
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
           {[
             { id: 'all', label: `All Tracks (${currentPack.domains.length})` },
+            { id: 'it_curriculum', label: '🎓 IT & Emerging Tech (Days 1–5)' },
             { id: 'core_infra', label: '⭐ Core 7 Infra & Ops' },
             { id: 'specialized', label: '🔥 All 10 Specialized Systems' },
             { id: 'cloud_infra', label: 'Cloud & Infrastructure' },

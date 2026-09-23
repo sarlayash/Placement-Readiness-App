@@ -1564,6 +1564,12 @@ import {
   DAY_3_BUSINESS_COMMUNICATION_QUESTIONS,
   DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
 } from './professionalAssessmentsDay3';
+import {
+  DAY_1_CURRICULUM_DOMAINS,
+  DAY_3_CURRICULUM_DOMAINS,
+  DAY_4_CURRICULUM_DOMAINS,
+  DAY_5_CURRICULUM_DOMAINS,
+} from './itCurriculumDays';
 
 export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
   dayNumber: 1,
@@ -1699,6 +1705,7 @@ export const DAY_1_MOCK_TEST_PACK: DayMockTestPack = {
       targetRoles: ['Consulting, IT Services, Product Firms'],
       questions: DAY_1_LOGICAL_QUESTIONS,
     },
+    ...DAY_1_CURRICULUM_DOMAINS,
   ],
 };
 
@@ -1750,6 +1757,7 @@ export const DAY_3_MOCK_TEST_PACK: DayMockTestPack = {
       targetRoles: ['Engineering Leads, Project Directors, Executive Tracks'],
       questions: DAY_3_EMOTIONAL_INTELLIGENCE_QUESTIONS,
     },
+    ...DAY_3_CURRICULUM_DOMAINS,
   ],
 };
 
@@ -1760,23 +1768,38 @@ export const ALL_DAY_3_QUESTIONS: AptitudeQuestion[] = DAY_3_MOCK_TEST_PACK.doma
 export const DAY_4_MOCK_TEST_PACK: DayMockTestPack = {
   dayNumber: 4,
   title: 'Day 4: Specialized Systems, Cloud & AI Engineering Tracks',
-  tagline: '10 Advanced Engineering Tracks • 10 MCQs each • 100 System-Level Problems',
-  description: 'Production infrastructure & architectural assessment suite covering Windows Endpoint, Linux Automation, Multi-Cloud K8s, BGP Networking, Zero Trust IAM, Distributed Databases, AIOps Observability, ServiceNow Workflow, AI Solution Architecture, and Service Delivery.',
+  tagline: '14 Advanced Tracks • Virtualization, Security, IoT, UAVs & Architecture • 140 Problems',
+  description: 'Production infrastructure & architectural assessment suite covering Windows Endpoint, Linux Automation, Multi-Cloud K8s, BGP Networking, Zero Trust IAM, Distributed Databases, AIOps Observability, ServiceNow Workflow, AI Solution Architecture, Service Delivery, Virtualization & Cloud Platforms, Information Security, IoT & Smart Edge, and Drones & Autonomous UAV Systems.',
   status: 'active',
-  totalQuestions: 100,
-  domains: SPECIALIZED_ENGINEERING_TRACKS,
+  totalQuestions: 140,
+  domains: [...SPECIALIZED_ENGINEERING_TRACKS, ...DAY_4_CURRICULUM_DOMAINS],
 };
 
 export const ALL_DAY_4_QUESTIONS: AptitudeQuestion[] = DAY_4_MOCK_TEST_PACK.domains.flatMap(
   (d) => d.questions
 );
 
-// Extensible Day Registry: Day 1, Day 2, Day 3 & Day 4 active
+export const DAY_5_MOCK_TEST_PACK: DayMockTestPack = {
+  dayNumber: 5,
+  title: 'Day 5: Emerging Technologies - Industry 5.0, AI/ML, GenAI, Blockchain & Spatial XR',
+  tagline: '5 Frontier Engineering Domains • 10 MCQs each • 50 Specialized Assessment Problems',
+  description: 'Frontier and emerging technology curriculum introducing Industry 5.0 human-cobot manufacturing, 3D printing & additive processes, Core AI/ML algorithms & evaluation metrics, Generative AI transformer architectures & ChatGPT prompt engineering, Blockchain consensus & EVM smart contracts, and Extended Reality (AR/VR/MR) spatial computing.',
+  status: 'active',
+  totalQuestions: 50,
+  domains: DAY_5_CURRICULUM_DOMAINS,
+};
+
+export const ALL_DAY_5_QUESTIONS: AptitudeQuestion[] = DAY_5_MOCK_TEST_PACK.domains.flatMap(
+  (d) => d.questions
+);
+
+// Extensible Day Registry: Day 1 to Day 5 all fully active
 export const ALL_DAY_MOCK_TESTS: DayMockTestPack[] = [
   DAY_1_MOCK_TEST_PACK,
   DAY_2_MOCK_TEST_PACK,
   DAY_3_MOCK_TEST_PACK,
   DAY_4_MOCK_TEST_PACK,
+  DAY_5_MOCK_TEST_PACK,
 ];
 
 // Helper to flatten all Day 1 questions into a combined question bank
